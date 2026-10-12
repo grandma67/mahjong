@@ -27,13 +27,18 @@ Each deal has a shareable URL such as `#turtle-1234`.
 - 2 face sets: traditional tiles drawn as SVG in code, and emoji
 - Hints, unlimited undo (including shuffles), solvable reshuffle, timer, best time per layout
 - Responsive layout, keyboard support, `prefers-reduced-motion` support
+- Installable as an app on desktop and mobile (PWA) and works offline
 
 ## Project structure
 
 ```
 index.html            page shell and dialogs
+manifest.webmanifest  PWA manifest (install metadata, icons, screenshots)
+sw.js                 service worker (offline cache)
+assets/               app icons and install-dialog screenshots
 css/main.css          all styling, driven by theme tokens (CSS custom properties)
 src/main.js           app controller: wires model, view, controls, persistence
+src/pwa.js            service worker registration and Install button
 src/core/             pure game logic, no DOM (unit tested)
   tiles.js            the 144-tile set and matching rules
   layouts.js          layout definitions (half-tile coordinate grid)
@@ -73,10 +78,37 @@ npm start    # serve locally on http://localhost:8080
 
 Any static file server works. ES modules don't load from `file://`, so open the game through a server.
 
+## Installable app (PWA)
+
+In Chrome or Edge, use the **Install** button in the toolbar (or the install icon in the address bar)
+on desktop. On Android, use **Add to Home screen** / **Install app**. On iOS Safari, use
+**Share → Add to Home Screen**. Once installed, the game runs in its own window and works offline.
+
+**Shared-origin safety.** GitHub Pages serves every project of a user from one origin
+(`<user>.github.io`). Caches, localStorage and service workers are per origin, so this app uses the
+unique id **`rh-mahjong-solitaire`** everywhere it could clash with another app:
+
+- `manifest.webmanifest` → `"id": "rh-mahjong-solitaire"` (resolved per repo path, so the app's identity is unique)
+- `sw.js` → every cache is named `rh-mahjong-solitaire-*`. The worker only reads its own caches
+  (it never calls the global `caches.match()`) and only deletes its own old caches.
+- `src/ui/storage.js` → localStorage key `rh-mahjong-solitaire:prefs:v1`
+- The service worker is registered with a relative URL, so its scope is the repo folder, not the whole origin.
+
+`tests/pwa.test.js` checks these invariants. It also checks that every app file is in the service
+worker's precache list, so the test fails if you add a module without listing it in `PRECACHE_URLS`.
+
+The deploy workflow stamps the commit SHA into `sw.js`. Every deploy therefore installs a fresh
+cache and removes the previous one.
+
+To regenerate the PNG icons after editing `assets/icons/icon.svg`, render the SVG at 192, 512
+(and the maskable variant at 512 / 180) with any SVG rasteriser.
+
 ## Deploying to GitHub Pages
 
 The workflow in `.github/workflows/pages.yml` runs the tests and deploys on every push to `main`.
 To turn it on once, go to **Settings → Pages → Build and deployment → Source** and choose **GitHub Actions**.
 
 You can also choose **Deploy from a branch** with `main` / `(root)`. The site has no build step,
-and `.nojekyll` is already in place.
+and `.nojekyll` is already in place. In that mode the service worker version is not stamped, so bump
+`VERSION` in `sw.js` by hand when you release. Until you do, returning visitors still get updates
+one load late through stale-while-revalidate.
