@@ -144,6 +144,7 @@ const ACTIONS = {
   undo: doUndo,
   hint: doHint,
   shuffle: doShuffle,
+  mute: () => setSound(!prefs.sound),
   settings: () => {
     syncSettings();
     openDialog('#settings-dialog');
@@ -164,7 +165,7 @@ document.addEventListener('keydown', (e) => {
     return doUndo();
   }
   if (e.ctrlKey || e.metaKey || e.altKey) return;
-  const key = { h: 'hint', u: 'undo', s: 'shuffle', n: 'new', r: 'restart', '?': 'help' }[e.key.toLowerCase()];
+  const key = { h: 'hint', u: 'undo', s: 'shuffle', n: 'new', r: 'restart', m: 'mute', '?': 'help' }[e.key.toLowerCase()];
   if (key) ACTIONS[key]();
   else if (e.key === 'Escape' && game.selected != null) {
     game.selected = null;
@@ -269,11 +270,8 @@ function buildSettings() {
   });
 
   const soundOpt = $('#opt-sound');
-  soundOpt.checked = prefs.sound;
-  soundOpt.addEventListener('change', () => {
-    prefs.sound = sound.enabled = soundOpt.checked;
-    savePrefs(prefs);
-  });
+  soundOpt.addEventListener('change', () => setSound(soundOpt.checked));
+  setSound(prefs.sound);
 
   const ambienceOpt = $('#opt-ambience');
   ambienceOpt.checked = prefs.ambience;
@@ -282,6 +280,18 @@ function buildSettings() {
     savePrefs(prefs);
     applyAmbiencePref();
   });
+}
+
+/** Turns sound effects on or off, keeping the toolbar button and the settings checkbox in sync. */
+function setSound(on) {
+  prefs.sound = sound.enabled = on;
+  savePrefs(prefs);
+  $('#opt-sound').checked = on;
+  const btn = $('[data-action="mute"]');
+  btn.setAttribute('aria-pressed', String(!on));
+  btn.title = on ? 'Mute sounds (M)' : 'Unmute sounds (M)';
+  btn.querySelector('use').setAttribute('href', on ? '#i-sound' : '#i-mute');
+  btn.querySelector('span').textContent = on ? 'Sound' : 'Muted';
 }
 
 function setTheme(id) {

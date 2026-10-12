@@ -17,7 +17,7 @@ with four of each, four each of the 4 Winds and 3 Dragons, and one each of 4 Flo
 **Every deal can be won.** The generator plays the layout backwards: it removes random pairs of free
 slots, then gives each pair matching faces. Shuffles are dealt the same way.
 
-Keyboard: `H` hint · `U` / `Ctrl+Z` undo · `S` shuffle · `N` new game · `R` restart · `Esc` deselect.
+Keyboard: `H` hint · `U` / `Ctrl+Z` undo · `S` shuffle · `N` new game · `R` restart · `M` mute · `Esc` deselect.
 Each deal has a shareable URL such as `#turtle-1234`.
 
 ## Features
