@@ -131,6 +131,19 @@ for (const [name, size] of [['upright', { width: 1200, height: 700 }], ['turned'
   });
 }
 
+for (const [name, size] of [['turtle turned', { width: 390, height: 700 }], ['pyramid', { width: 1200, height: 700, layout: 'pyramid' }]]) {
+  test(`${name}: the board has no empty margin, so it centers and fills the screen`, () => {
+    const { view, game } = mountBoard(size);
+    const d = px(view.surface.style.vars['--d']);
+    const boxes = game.slots.map((s) => box(view, s));
+    const near = (a, b) => Math.abs(a - b) < 0.01;
+    assert.ok(near(Math.min(...boxes.map((b) => b.left)), 0), 'left edge');
+    assert.ok(near(Math.min(...boxes.map((b) => b.top)), 0), 'top edge');
+    assert.ok(near(Math.max(...boxes.map((b) => b.right)) + d, px(view.surface.style.width)), 'right edge');
+    assert.ok(near(Math.max(...boxes.map((b) => b.bottom)) + d, px(view.surface.style.height)), 'bottom edge');
+  });
+}
+
 test('update marks free, blocked, selected and hinted tiles', () => {
   const { view, game } = mountBoard({ width: 1200, height: 700 });
   const free = game.freeIndices()[0];

@@ -11,6 +11,10 @@ const TILE_RATIO = 1.32;   // height / width
 const DEPTH_RATIO = 0.13;  // layer offset / width
 const MAX_TILE_W = 84;
 
+// Tile corner in tile widths: higher layers shift up and to the left.
+const tileLeft = (x, z) => x / 2 - z * DEPTH_RATIO;
+const tileTop = (y, z) => (y / 2) * TILE_RATIO - z * DEPTH_RATIO;
+
 export class BoardView {
   constructor(container, { onTileClick }) {
     this.container = container;
@@ -62,44 +66,56 @@ export class BoardView {
    */
   layout() {
     if (!this.game) return;
-    const { width, height, layers } = this.bounds;
     const style = getComputedStyle(this.container);
     const availW = this.container.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
     const availH = this.container.clientHeight - parseFloat(style.paddingTop) - parseFloat(style.paddingBottom);
-    const fit = (cols, rows) => Math.min(
-      MAX_TILE_W,
-      availW / (cols + DEPTH_RATIO * layers),
-      availH / (rows * TILE_RATIO + DEPTH_RATIO * layers),
-    );
-    const upright = fit(width / 2, height / 2);
-    const turned = fit(height / 2, width / 2);
-    this.rotated = turned > upright;
+    const fit = (box) => Math.min(MAX_TILE_W, availW / box.w, availH / box.h);
+    const upright = this.extent(false);
+    const turned = this.extent(true);
+    this.rotated = fit(turned) > fit(upright);
     this.container.classList.toggle('rotated', this.rotated);
 
-    const cols = (this.rotated ? height : width) / 2;
-    const rows = (this.rotated ? width : height) / 2;
-    const tw = Math.max(upright, turned);
-    const th = tw * TILE_RATIO;
-    const d = tw * DEPTH_RATIO;
-
+    const box = this.rotated ? turned : upright;
+    const tw = fit(box);
     this.surface.style.setProperty('--tw', `${tw}px`);
-    this.surface.style.setProperty('--th', `${th}px`);
-    this.surface.style.setProperty('--d', `${d}px`);
-    this.surface.style.width = `${cols * tw + layers * d}px`;
-    this.surface.style.height = `${rows * th + layers * d}px`;
+    this.surface.style.setProperty('--th', `${tw * TILE_RATIO}px`);
+    this.surface.style.setProperty('--d', `${tw * DEPTH_RATIO}px`);
+    this.surface.style.width = `${box.w * tw}px`;
+    this.surface.style.height = `${box.h * tw}px`;
 
-    const base = (layers - 1) * d;
     for (const slot of this.game.slots) {
       const el = this.els[slot.index];
-      // Half-tile grid position on screen; a clockwise turn maps (x, y) to (H - 2 - y, x).
-      const x = this.rotated ? height - 2 - slot.y : slot.x;
-      const y = this.rotated ? slot.x : slot.y;
-      el.style.left = `${(x / 2) * tw + base - slot.z * d}px`;
-      el.style.top = `${(y / 2) * th + base - slot.z * d}px`;
+      const { x, y } = this.place(slot, this.rotated);
+      el.style.left = `${(tileLeft(x, slot.z) - box.minX) * tw}px`;
+      el.style.top = `${(tileTop(y, slot.z) - box.minY) * tw}px`;
       // Draw higher layers first, then lower rows and rightmost tiles on top,
       // so each tile's 3D side is covered by its neighbour.
       el.style.zIndex = String(slot.z * 1000 + y * 30 + x);
     }
+  }
+
+  /** Half-tile grid position on screen; a clockwise turn maps (x, y) to (H - 2 - y, x). */
+  place(slot, rotated) {
+    return rotated ? { x: this.bounds.height - 2 - slot.y, y: slot.x } : { x: slot.x, y: slot.y };
+  }
+
+  /**
+   * The area the tiles really cover, in tile widths, including each tile's 3D
+   * side. Measuring the tiles themselves (rather than reserving room for the
+   * tallest stack on every edge) keeps empty space off the board's edges.
+   */
+  extent(rotated) {
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    for (const slot of this.game.slots) {
+      const { x, y } = this.place(slot, rotated);
+      const left = tileLeft(x, slot.z);
+      const top = tileTop(y, slot.z);
+      minX = Math.min(minX, left);
+      minY = Math.min(minY, top);
+      maxX = Math.max(maxX, left + 1 + DEPTH_RATIO);
+      maxY = Math.max(maxY, top + TILE_RATIO + DEPTH_RATIO);
+    }
+    return { minX, minY, w: maxX - minX, h: maxY - minY };
   }
 
   /**
