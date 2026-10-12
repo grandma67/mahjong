@@ -1,0 +1,82 @@
+# 🀄 Mahjong Solitaire
+
+A themeable Mahjong Solitaire game written in plain JavaScript (ES modules).
+It has no dependencies and no build step, so GitHub Pages can serve it as is.
+
+## How to play
+
+Clear the board by removing **matching pairs** of **free** tiles.
+
+- A tile is **free** when nothing lies on top of it and its **left or right** side is open.
+- Identical tiles match. Any **Flower** matches any Flower, and any **Season** matches any Season.
+- You win when the board is empty. If no free pair is left, undo or shuffle the remaining tiles.
+
+The set has the standard 144 tiles. That's three suits (Dots, Bamboo, Characters) numbered 1–9
+with four of each, four each of the 4 Winds and 3 Dragons, and one each of 4 Flowers and 4 Seasons.
+
+**Every deal can be won.** The generator plays the layout backwards: it removes random pairs of free
+slots, then gives each pair matching faces. Shuffles are dealt the same way.
+
+Keyboard: `H` hint · `U` / `Ctrl+Z` undo · `S` shuffle · `N` new game · `R` restart · `Esc` deselect.
+Each deal has a shareable URL such as `#turtle-1234`.
+
+## Features
+
+- 5 layouts: Turtle (classic, 144 tiles), Pyramid, Fortress, Cross, Garden
+- 7 themes: Jade Classic, Midnight, Sakura, Ocean Breeze, Imperial Ember, Neon Arcade, Emoji Garden
+- 2 face sets: traditional tiles drawn as SVG in code, and emoji
+- Hints, unlimited undo (including shuffles), solvable reshuffle, timer, best time per layout
+- Responsive layout, keyboard support, `prefers-reduced-motion` support
+
+## Project structure
+
+```
+index.html            page shell and dialogs
+css/main.css          all styling, driven by theme tokens (CSS custom properties)
+src/main.js           app controller: wires model, view, controls, persistence
+src/core/             pure game logic, no DOM (unit tested)
+  tiles.js            the 144-tile set and matching rules
+  layouts.js          layout definitions (half-tile coordinate grid)
+  board.js            geometry and the free-tile rule
+  generator.js        solvable deal generation
+  game.js             game state: select, match, undo, hint, shuffle, status
+  rng.js              seeded PRNG for reproducible deals
+src/ui/
+  boardView.js        renders a Game into the DOM
+  themes.js           theme registry
+  faces/              face sets (traditional SVG, emoji) and registry
+  storage.js, timer.js
+tests/                node:test unit tests
+```
+
+### Adding a theme
+
+Add an entry to `THEMES` in `src/ui/themes.js` with the same token keys as the other themes and a
+`faceSet` (`traditional` or `emoji`). A test checks that every theme defines the same tokens.
+
+### Adding a layout
+
+Add a `defineLayout({...})` entry in `src/core/layouts.js` using the `rect()` / `row()` helpers.
+Tests check that the tile count is even, that nothing overlaps, that no tile floats, and that deals can be solved.
+
+### Adding a face set
+
+Create a module exporting `{ id, render(face) => '<svg …>' }` in `src/ui/faces/` and register it in
+`src/ui/faces/index.js`.
+
+## Development
+
+```bash
+npm test     # run unit tests (Node 22+)
+npm start    # serve locally on http://localhost:8080
+```
+
+Any static file server works. ES modules don't load from `file://`, so open the game through a server.
+
+## Deploying to GitHub Pages
+
+The workflow in `.github/workflows/pages.yml` runs the tests and deploys on every push to `main`.
+To turn it on once, go to **Settings → Pages → Build and deployment → Source** and choose **GitHub Actions**.
+
+You can also choose **Deploy from a branch** with `main` / `(root)`. The site has no build step,
+and `.nojekyll` is already in place.
