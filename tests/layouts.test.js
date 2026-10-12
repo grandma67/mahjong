@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { LAYOUTS, getLayout } from '../src/core/layouts.js';
-import { buildGeometry, isFree } from '../src/core/board.js';
+import { buildGeometry, isFree, bounds } from '../src/core/board.js';
 
 test('turtle has the classic 144 tiles', () => {
   assert.equal(getLayout('turtle').slots.length, 144);
@@ -59,4 +59,18 @@ test('half-offset tiles block neighbours they partially overlap', () => {
   const geo = buildGeometry(slots);
   assert.deepEqual(geo[0].right.sort(), [1, 2]);
   assert.deepEqual(geo[1].left, [0]);
+});
+
+test('layout ids are unique and every layout has a name and difficulty', () => {
+  assert.equal(new Set(LAYOUTS.map((l) => l.id)).size, LAYOUTS.length);
+  for (const l of LAYOUTS) {
+    assert.ok(l.name && l.difficulty, l.id);
+    l.slots.forEach((s, i) => assert.equal(s.index, i, `${l.id} slot ${i} has the wrong index`));
+  }
+});
+
+test('bounds covers the whole layout in half-tile units', () => {
+  const slots = [{ x: 0, y: 0, z: 0 }, { x: 6, y: 3, z: 0 }, { x: 2, y: 1, z: 2 }];
+  assert.deepEqual(bounds(slots), { width: 8, height: 5, layers: 3 });
+  assert.deepEqual(bounds(getLayout('pyramid').slots), { width: 16, height: 16, layers: 4 });
 });

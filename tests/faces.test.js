@@ -21,3 +21,20 @@ test('faces have readable names', () => {
   assert.equal(describeFace('wind-north'), 'North Wind');
   assert.equal(describeFace('flower-plum'), 'Plum (flower)');
 });
+
+test('unknown face sets fall back to traditional', () => {
+  assert.equal(renderFace('nope', 'dots-1'), renderFace('traditional', 'dots-1'));
+});
+
+test('every face has a name, covering each category', () => {
+  assert.equal(describeFace('characters-9'), '9 of Characters');
+  assert.equal(describeFace('bamboo-1'), '1 of Bamboo');
+  assert.equal(describeFace('dragon-white'), 'White Dragon');
+  assert.equal(describeFace('season-autumn'), 'Autumn (season)');
+  const names = FACES.map((f) => describeFace(f.id));
+  assert.equal(new Set(names).size, FACES.length, 'names must be unique for screen readers');
+});
+
+test('unknown face ids are rejected', () => {
+  assert.throws(() => describeFace('dots-10'), /Unknown tile face/);
+});

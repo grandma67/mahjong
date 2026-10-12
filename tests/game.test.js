@@ -88,3 +88,81 @@ test('a game can be played to completion with hints + shuffles', () => {
     assert.equal(g.tilesLeft, 0);
   }
 });
+
+/** Four tiles in a row: only the two ends are ever free. */
+const ROW_OF_FOUR = {
+  id: 'row',
+  name: 'Row',
+  slots: [0, 2, 4, 6].map((x, index) => ({ x, y: 0, z: 0, index })),
+};
+
+test('status is STUCK when no free tiles match, and hint returns null', () => {
+  const g = new Game(ROW_OF_FOUR, 1);
+  g.tiles = ['dots-1', 'dots-2', 'dots-1', 'dots-2'];
+  assert.deepEqual(g.freeIndices(), [0, 3]);
+  assert.equal(g.status, STATUS.STUCK);
+  assert.equal(g.hint(), null);
+  assert.equal(g.hintsUsed, 0, 'a failed hint is not counted');
+});
+
+test('shuffling a stuck board makes it playable again', () => {
+  const g = new Game(ROW_OF_FOUR, 1);
+  g.tiles = ['dots-1', 'dots-2', 'dots-1', 'dots-2'];
+  g.select(0);
+  assert.ok(g.shuffle());
+  assert.equal(g.status, STATUS.PLAYING);
+  assert.equal(g.selected, null, 'shuffle clears the selection');
+  assert.equal(g.shuffles, 1);
+  assert.deepEqual([...g.tiles].sort(), ['dots-1', 'dots-1', 'dots-2', 'dots-2']);
+});
+
+test('shuffle does nothing on an empty board', () => {
+  const g = new Game(ROW_OF_FOUR, 1);
+  g.tiles = [null, null, null, null];
+  assert.equal(g.status, STATUS.WON);
+  assert.equal(g.shuffle(), false);
+  assert.equal(g.history.length, 0);
+  assert.equal(g.shuffles, 0);
+});
+
+test('hint returns a playable pair and counts its use', () => {
+  const g = new Game(getLayout('turtle'), 21);
+  const [a, b] = g.hint();
+  assert.ok(g.isFree(a) && g.isFree(b) && a !== b);
+  assert.ok(facesMatch(g.tiles[a], g.tiles[b]));
+  g.hint();
+  assert.equal(g.hintsUsed, 2);
+});
+
+test('clicking an already removed tile is ignored', () => {
+  const g = new Game(getLayout('garden'), 2);
+  const [a, b] = g.availableMatches()[0];
+  g.select(a);
+  g.select(b);
+  assert.equal(g.select(a).type, 'ignored');
+  assert.equal(g.selected, null);
+});
+
+test('matchesMade counts matches only and undo clears the selection', () => {
+  const g = new Game(getLayout('garden'), 4);
+  const [a, b] = g.availableMatches()[0];
+  g.select(a); g.select(b);
+  g.shuffle();
+  assert.equal(g.matchesMade, 1);
+  assert.equal(g.history.length, 2);
+  g.select(g.freeIndices()[0]);
+  g.undo();
+  assert.equal(g.selected, null);
+  g.undo();
+  assert.equal(g.matchesMade, 0);
+  assert.equal(g.tilesLeft, g.slots.length);
+});
+
+test('restarting with the same seed replays the same deal after moves and shuffles', () => {
+  const g = new Game(getLayout('cross'), 77);
+  const original = [...g.tiles];
+  const [a, b] = g.hint();
+  g.select(a); g.select(b);
+  g.shuffle();
+  assert.deepEqual(new Game(getLayout('cross'), 77).tiles, original);
+});
