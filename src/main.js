@@ -6,10 +6,12 @@ import { Game, STATUS } from './core/game.js';
 import { LAYOUTS, getLayout } from './core/layouts.js';
 import { randomSeed } from './core/rng.js';
 import { BoardView } from './ui/boardView.js';
-import { THEMES, getTheme, applyTheme, themeStyle } from './ui/themes.js';
+import { THEMES, getTheme, applyTheme, themeStyle, ambienceFor } from './ui/themes.js';
 import { renderFace } from './ui/faces/index.js';
 import { loadPrefs, savePrefs } from './ui/storage.js';
 import { Timer, formatTime } from './ui/timer.js';
+import { Sound } from './ui/sound.js';
+import { Ambience } from './ui/ambience.js';
 import { registerServiceWorker, setupInstall } from './pwa.js';
 
 const $ = (sel) => document.querySelector(sel);
@@ -20,6 +22,10 @@ let theme = getTheme(prefs.themeId);
 
 const view = new BoardView($('#board'), { onTileClick: handleTileClick });
 const timer = new Timer((s) => { $('#stat-time').textContent = formatTime(s); });
+const sound = new Sound({ enabled: prefs.sound });
+const ambience = new Ambience($('#ambience'), {
+  reducedMotion: matchMedia('(prefers-reduced-motion: reduce)').matches,
+});
 
 // ---- Game lifecycle --------------------------------------------------------
 
@@ -53,6 +59,9 @@ function handleTileClick(index) {
   const result = game.select(index);
   if (result.type === 'ignored') return;
   timer.start();
+
+  if (result.type === 'match') sound.match();
+  else if (result.type === 'blocked' || result.type === 'mismatch') sound.error();
 
   if (result.type === 'blocked') {
     view.flash(result.indices, 'shake');
@@ -257,6 +266,21 @@ function buildSettings() {
     savePrefs(prefs);
     applyIndexPref();
   });
+
+  const soundOpt = $('#opt-sound');
+  soundOpt.checked = prefs.sound;
+  soundOpt.addEventListener('change', () => {
+    prefs.sound = sound.enabled = soundOpt.checked;
+    savePrefs(prefs);
+  });
+
+  const ambienceOpt = $('#opt-ambience');
+  ambienceOpt.checked = prefs.ambience;
+  ambienceOpt.addEventListener('change', () => {
+    prefs.ambience = ambienceOpt.checked;
+    savePrefs(prefs);
+    applyAmbiencePref();
+  });
 }
 
 function setTheme(id) {
@@ -266,6 +290,13 @@ function setTheme(id) {
   prefs.themeId = theme.id;
   savePrefs(prefs);
   if (game && theme.faceSet !== previousFaceSet) view.setFaceSet(theme.faceSet);
+  applyAmbiencePref();
+}
+
+function applyAmbiencePref() {
+  document.documentElement.classList.toggle('no-ambience', !prefs.ambience);
+  if (prefs.ambience) ambience.setEffect(ambienceFor(theme));
+  else ambience.stop();
 }
 
 function applyIndexPref() {

@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="description" content="Mahjong Solitaire: match free pairs of tiles to clear the board. Several layouts and themes.">
   <meta name="theme-color" content="#0d3a29">
+  <meta name="color-scheme" content="dark light">
   <title>Mahjong Solitaire</title>
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="assets/icons/icon.svg" type="image/svg+xml">
@@ -32,6 +33,8 @@
     <symbol id="i-install" viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></symbol>
     <symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6V14M12 17.5v.01"/></symbol>
   </svg>
+
+  <canvas id="ambience" class="ambience" aria-hidden="true"></canvas>
 
   <header class="topbar">
     <div class="brand">
@@ -78,6 +81,8 @@
         <h3>Options</h3>
         <label class="toggle"><input type="checkbox" id="opt-highlight"> Dim blocked tiles</label>
         <label class="toggle"><input type="checkbox" id="opt-index"> Show corner numbers</label>
+        <label class="toggle"><input type="checkbox" id="opt-sound"> Sound effects</label>
+        <label class="toggle"><input type="checkbox" id="opt-ambience"> Animated background</label>
       </section>
       <div class="dialog-actions"><button class="primary" value="close" autofocus>Done</button></div>
     </form>

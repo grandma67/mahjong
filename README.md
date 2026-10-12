@@ -26,6 +26,8 @@ Each deal has a shareable URL such as `#turtle-1234`.
 - 7 themes: Jade Classic, Midnight, Sakura, Ocean Breeze, Imperial Ember, Neon Arcade, Emoji Garden
 - 2 face sets: traditional tiles drawn as SVG in code, and emoji
 - Hints, unlimited undo (including shuffles), solvable reshuffle, timer, best time per layout
+- Sound effects for matches and wrong picks (synthesized with Web Audio, can be muted)
+- Animated background per theme: drifting motes, stars, petals, bubbles, embers, neon streaks, butterflies
 - Responsive layout, keyboard support, `prefers-reduced-motion` support
 - Installable as an app on desktop and mobile (PWA) and works offline
 
@@ -49,6 +51,8 @@ src/core/             pure game logic, no DOM (unit tested)
 src/ui/
   boardView.js        renders a Game into the DOM
   themes.js           theme registry
+  ambience.js         animated background effects (one per theme)
+  sound.js            synthesized sound effects
   faces/              face sets (traditional SVG, emoji) and registry
   storage.js, timer.js
 tests/                node:test unit tests
@@ -57,7 +61,8 @@ tests/                node:test unit tests
 ### Adding a theme
 
 Add an entry to `THEMES` in `src/ui/themes.js` with the same token keys as the other themes and a
-`faceSet` (`traditional` or `emoji`). A test checks that every theme defines the same tokens.
+`faceSet` (`traditional` or `emoji`), plus an `ambience` effect from `src/ui/ambience.js` whose
+colors are token names. Tests check that every theme defines the same tokens and a valid effect.
 
 ### Adding a layout
 

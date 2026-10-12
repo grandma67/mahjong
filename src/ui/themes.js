@@ -1,13 +1,15 @@
 /**
- * Theme registry. A theme is pure data: which face set to use, plus design
- * tokens that become CSS custom properties (`--bg`, `--tile-face`, ...).
+ * Theme registry. A theme is pure data: which face set to use, which animated
+ * background effect to run (see ambience.js; its colors are token names), plus
+ * design tokens that become CSS custom properties (`--bg`, `--tile-face`, ...).
  * To add a theme, append an entry here. No CSS changes are needed.
  */
 
-const theme = (id, name, faceSet, scheme, tokens) => Object.freeze({ id, name, faceSet, scheme, tokens });
+const theme = (id, name, faceSet, scheme, ambience, tokens) =>
+  Object.freeze({ id, name, faceSet, scheme, ambience: Object.freeze(ambience), tokens });
 
 export const THEMES = Object.freeze([
-  theme('jade', 'Jade Classic', 'traditional', 'dark', {
+  theme('jade', 'Jade Classic', 'traditional', 'dark', { kind: 'motes', colors: ['accent', 'select', 'tile-face'] }, {
     'bg': 'radial-gradient(ellipse at 50% 30%, #1f7a55 0%, #0f5138 55%, #08301f 100%)',
     'text': '#f3ecd6',
     'panel': 'rgba(4, 30, 20, 0.55)',
@@ -27,7 +29,7 @@ export const THEMES = Object.freeze([
     'hint': '#5fe3ff',
     'tile-glow': 'transparent',
   }),
-  theme('midnight', 'Midnight', 'traditional', 'dark', {
+  theme('midnight', 'Midnight', 'traditional', 'dark', { kind: 'stars', colors: ['text', 'accent', 'select'] }, {
     'bg': 'radial-gradient(ellipse at 50% 0%, #283a6b 0%, #121a35 55%, #070b18 100%)',
     'text': '#dfe6ff',
     'panel': 'rgba(10, 16, 36, 0.6)',
@@ -47,7 +49,7 @@ export const THEMES = Object.freeze([
     'hint': '#8affc1',
     'tile-glow': 'transparent',
   }),
-  theme('sakura', 'Sakura', 'traditional', 'light', {
+  theme('sakura', 'Sakura', 'traditional', 'light', { kind: 'petals', colors: ['tile-face', 'select', 'tile-side'] }, {
     'bg': 'linear-gradient(160deg, #ffe4ee 0%, #fbc6d8 45%, #e8a6c3 100%)',
     'text': '#5a2340',
     'panel': 'rgba(255, 255, 255, 0.55)',
@@ -67,7 +69,7 @@ export const THEMES = Object.freeze([
     'hint': '#55c7a6',
     'tile-glow': 'transparent',
   }),
-  theme('ocean', 'Ocean Breeze', 'traditional', 'dark', {
+  theme('ocean', 'Ocean Breeze', 'traditional', 'dark', { kind: 'bubbles', colors: ['text', 'tile-side'] }, {
     'bg': 'linear-gradient(180deg, #0f6f93 0%, #0a4c6e 50%, #062c45 100%)',
     'text': '#e6f7ff',
     'panel': 'rgba(3, 30, 48, 0.55)',
@@ -87,7 +89,7 @@ export const THEMES = Object.freeze([
     'hint': '#ff8a65',
     'tile-glow': 'transparent',
   }),
-  theme('ember', 'Imperial Ember', 'traditional', 'dark', {
+  theme('ember', 'Imperial Ember', 'traditional', 'dark', { kind: 'embers', colors: ['accent', 'select', 'tile-side'] }, {
     'bg': 'radial-gradient(ellipse at 50% 20%, #7a1f1a 0%, #4a0f10 55%, #220607 100%)',
     'text': '#fbe7c6',
     'panel': 'rgba(34, 6, 7, 0.55)',
@@ -107,7 +109,7 @@ export const THEMES = Object.freeze([
     'hint': '#7cf0ff',
     'tile-glow': 'transparent',
   }),
-  theme('neon', 'Neon Arcade', 'traditional', 'dark', {
+  theme('neon', 'Neon Arcade', 'traditional', 'dark', { kind: 'neon', colors: ['accent', 'tile-edge', 'ink-green'] }, {
     'bg': 'linear-gradient(rgba(255,0,200,0.06) 1px, transparent 1px) 0 0 / 32px 32px, linear-gradient(90deg, rgba(0,240,255,0.06) 1px, transparent 1px) 0 0 / 32px 32px, #07040f',
     'text': '#f4eaff',
     'panel': 'rgba(20, 8, 40, 0.7)',
@@ -127,7 +129,7 @@ export const THEMES = Object.freeze([
     'hint': '#39ff9e',
     'tile-glow': 'rgba(0, 229, 255, 0.45)',
   }),
-  theme('garden', 'Emoji Garden', 'emoji', 'light', {
+  theme('garden', 'Emoji Garden', 'emoji', 'light', { kind: 'butterflies', colors: ['accent'] }, {
     'bg': 'linear-gradient(180deg, #bfe9ff 0%, #d9f6d0 70%, #a7dd8a 100%)',
     'text': '#1f3b1a',
     'panel': 'rgba(255, 255, 255, 0.6)',
@@ -158,6 +160,11 @@ export function getTheme(id) {
 /** Inline style string with a theme's tokens, e.g. for theme preview swatches. */
 export function themeStyle(t) {
   return Object.entries(t.tokens).map(([k, v]) => `--${k}:${v}`).join(';');
+}
+
+/** The theme's background effect with its token names resolved to colors. */
+export function ambienceFor(t) {
+  return { kind: t.ambience.kind, colors: t.ambience.colors.map((c) => t.tokens[c]) };
 }
 
 /** Applies a theme to the document root. */

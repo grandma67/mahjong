@@ -20,7 +20,8 @@ beforeEach(() => {
 test('defaults when nothing is stored', () => {
   const prefs = loadPrefs();
   assert.deepEqual(prefs, {
-    themeId: null, layoutId: null, highlightFree: true, showIndex: false, bestTimes: {}, seenHelp: false,
+    themeId: null, layoutId: null, highlightFree: true, showIndex: false, sound: true, ambience: true,
+    bestTimes: {}, seenHelp: false,
   });
   prefs.bestTimes.turtle = 1;
   assert.deepEqual(loadPrefs().bestTimes, {}, 'defaults are not shared between loads');

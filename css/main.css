@@ -5,6 +5,7 @@
  */
 
 :root {
+  color-scheme: dark light;
   --bg: #0f5138;
   --text: #f3ecd6;
   --panel: rgba(4, 30, 20, 0.55);
@@ -48,6 +49,38 @@ body {
 }
 
 button { font: inherit; color: inherit; }
+
+/* ---- Animated background ------------------------------------------------ */
+
+/* Slowly drifting glow in the theme's accent colors, under the particle canvas. */
+body::before {
+  content: '';
+  position: fixed;
+  inset: -25%;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(closest-side at 30% 35%, color-mix(in srgb, var(--accent) 22%, transparent), transparent),
+    radial-gradient(closest-side at 70% 65%, color-mix(in srgb, var(--hint) 16%, transparent), transparent);
+  animation: glow-drift 28s ease-in-out infinite alternate;
+}
+
+@keyframes glow-drift {
+  0% { transform: translate(-6%, -4%) rotate(0deg) scale(1); }
+  50% { transform: translate(5%, 3%) rotate(8deg) scale(1.1); }
+  100% { transform: translate(-3%, 6%) rotate(-6deg) scale(0.95); }
+}
+
+.ambience {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+}
+
+html.no-ambience body::before, html.no-ambience .ambience { display: none; }
 
 /* ---- Top bar ------------------------------------------------------------ */
 
@@ -119,6 +152,8 @@ button { font: inherit; color: inherit; }
   padding: clamp(10px, 3vmin, 32px);
   min-height: 0;
   overflow: hidden;
+  position: relative;
+  z-index: 1;
 }
 
 .board-surface { position: relative; }

@@ -37,6 +37,8 @@ const PRECACHE_URLS = [
   'src/ui/storage.js',
   'src/ui/themes.js',
   'src/ui/timer.js',
+  'src/ui/sound.js',
+  'src/ui/ambience.js',
   'src/ui/faces/emoji.js',
   'src/ui/faces/index.js',
   'src/ui/faces/svg.js',

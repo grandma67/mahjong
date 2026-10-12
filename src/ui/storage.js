@@ -11,6 +11,8 @@ const DEFAULTS = Object.freeze({
   layoutId: null,
   highlightFree: true,
   showIndex: false,
+  sound: true,
+  ambience: true,
   bestTimes: {},
   seenHelp: false,
 });
