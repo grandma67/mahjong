@@ -81,6 +81,15 @@ function checkEnd() {
   if (status === STATUS.WON) {
     timer.stop();
     recordWin();
+  } else if (status === STATUS.STUCK && !game.canBeCleared()) {
+    showResult({
+      title: 'Dead end',
+      text: `The ${game.tilesLeft} tiles left are stacked so they can never all be removed, so shuffling won't help. Undo a few moves to find another way.`,
+      actions: [
+        ['Undo', () => doUndo(), true],
+        ['New game', () => startGame(game.layout.id)],
+      ],
+    });
   } else if (status === STATUS.STUCK) {
     showResult({
       title: 'No moves left',
@@ -132,6 +141,9 @@ function doHint() {
 }
 
 function doShuffle() {
+  if (game.tilesLeft && !game.canBeCleared()) {
+    return toast("Shuffling can't help here: the tiles left can never all be removed. Try Undo.");
+  }
   if (!game.shuffle()) return;
   timer.start();
   toast('Remaining tiles shuffled.');

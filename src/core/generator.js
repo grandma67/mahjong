@@ -34,6 +34,18 @@ function findRemovalOrder(geometry, indices, rng) {
 }
 
 /**
+ * Whether the slots in `indices` can all be removed in pairs, whatever their
+ * faces. False means the shape itself is a dead end (for example the last two
+ * tiles stacked on top of each other), so no shuffle can help.
+ */
+export function canClear(geometry, indices, rng, attempts = 20) {
+  for (let i = 0; i < attempts; i++) {
+    if (findRemovalOrder(geometry, indices, rng)) return true;
+  }
+  return false;
+}
+
+/**
  * @param {Array} geometry   from buildGeometry
  * @param {number[]} indices slot indices to fill (all slots, or the remaining ones on reshuffle)
  * @param {Array<[string,string]>} pairs matching face pairs, one per two indices

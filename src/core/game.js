@@ -3,7 +3,7 @@
  * (or a test) drives it through method calls and reads the state back.
  */
 import { buildGeometry, isFree } from './board.js';
-import { deal, pairUp } from './generator.js';
+import { deal, pairUp, canClear } from './generator.js';
 import { facesMatch, pickPairs } from './tiles.js';
 import { createRng } from './rng.js';
 
@@ -118,16 +118,35 @@ export class Game {
     return last;
   }
 
-  /** A playable pair, preferring one that frees up the most tiles, or null if there is none. */
+  /**
+   * Whether the tiles left could still all be removed, if shuffled. False
+   * means the position is a dead end and only Undo can help.
+   */
+  canBeCleared() {
+    const remaining = this.slots.map((s) => s.index).filter(this.isPresent);
+    return canClear(this.geometry, remaining, createRng(this.seed + this.history.length));
+  }
+
+  /**
+   * A playable pair, or null if there is none. Prefers a pair that frees up the
+   * most tiles, but never one that leaves the board impossible to clear (such
+   * as taking a tile whose partner is the only other tile in its stack).
+   */
   hint() {
     const matches = this.availableMatches();
     if (!matches.length) return null;
     this.hintsUsed++;
     const blockedBy = (i) =>
       this.geometry.filter((g) => g.above.includes(i) || g.left.includes(i) || g.right.includes(i)).length;
-    return matches
+    const ranked = matches
       .map((m) => ({ m, score: blockedBy(m[0]) + blockedBy(m[1]) }))
-      .sort((a, b) => b.score - a.score)[0].m;
+      .sort((a, b) => b.score - a.score)
+      .map(({ m }) => m);
+    const remaining = this.slots.map((s) => s.index).filter(this.isPresent);
+    const rng = createRng(this.seed + this.history.length);
+    const keepsBoardClearable = ([a, b]) =>
+      canClear(this.geometry, remaining.filter((i) => i !== a && i !== b), rng);
+    return ranked.find(keepsBoardClearable) ?? ranked[0];
   }
 
   /**
