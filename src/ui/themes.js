@@ -25,6 +25,7 @@ export const THEMES = Object.freeze([
     'ink-black': '#1b1b1b',
     'select': '#ffd54a',
     'hint': '#5fe3ff',
+    'tile-glow': 'transparent',
   }),
   theme('midnight', 'Midnight', 'traditional', 'dark', {
     'bg': 'radial-gradient(ellipse at 50% 0%, #283a6b 0%, #121a35 55%, #070b18 100%)',
@@ -44,6 +45,7 @@ export const THEMES = Object.freeze([
     'ink-black': '#e9ecff',
     'select': '#ffd166',
     'hint': '#8affc1',
+    'tile-glow': 'transparent',
   }),
   theme('sakura', 'Sakura', 'traditional', 'light', {
     'bg': 'linear-gradient(160deg, #ffe4ee 0%, #fbc6d8 45%, #e8a6c3 100%)',
@@ -63,6 +65,7 @@ export const THEMES = Object.freeze([
     'ink-black': '#3d1a2b',
     'select': '#ff7eb6',
     'hint': '#55c7a6',
+    'tile-glow': 'transparent',
   }),
   theme('ocean', 'Ocean Breeze', 'traditional', 'dark', {
     'bg': 'linear-gradient(180deg, #0f6f93 0%, #0a4c6e 50%, #062c45 100%)',
@@ -82,6 +85,7 @@ export const THEMES = Object.freeze([
     'ink-black': '#17303f',
     'select': '#ffcc33',
     'hint': '#ff8a65',
+    'tile-glow': 'transparent',
   }),
   theme('ember', 'Imperial Ember', 'traditional', 'dark', {
     'bg': 'radial-gradient(ellipse at 50% 20%, #7a1f1a 0%, #4a0f10 55%, #220607 100%)',
@@ -101,6 +105,7 @@ export const THEMES = Object.freeze([
     'ink-black': '#2a1208',
     'select': '#ffe066',
     'hint': '#7cf0ff',
+    'tile-glow': 'transparent',
   }),
   theme('neon', 'Neon Arcade', 'traditional', 'dark', {
     'bg': 'linear-gradient(rgba(255,0,200,0.06) 1px, transparent 1px) 0 0 / 32px 32px, linear-gradient(90deg, rgba(0,240,255,0.06) 1px, transparent 1px) 0 0 / 32px 32px, #07040f',
@@ -120,6 +125,7 @@ export const THEMES = Object.freeze([
     'ink-black': '#fff36b',
     'select': '#ff2bd6',
     'hint': '#39ff9e',
+    'tile-glow': 'rgba(0, 229, 255, 0.45)',
   }),
   theme('garden', 'Emoji Garden', 'emoji', 'light', {
     'bg': 'linear-gradient(180deg, #bfe9ff 0%, #d9f6d0 70%, #a7dd8a 100%)',
@@ -139,6 +145,7 @@ export const THEMES = Object.freeze([
     'ink-black': '#3a3a3a',
     'select': '#ff8a3d',
     'hint': '#3e7bd6',
+    'tile-glow': 'transparent',
   }),
 ]);
 
