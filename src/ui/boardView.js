@@ -53,20 +53,32 @@ export class BoardView {
     this.update({ instant: true });
   }
 
-  /** Computes the tile size that fits the container and positions every tile. */
+  /**
+   * Computes the tile size that fits the container and positions every tile.
+   * When the container is tall and narrow (a phone held upright), the board is
+   * drawn turned 90° clockwise if that gives bigger tiles. Only the drawing
+   * turns: the faces stay upright and the game rules still use the original
+   * layout, so a tile's "left and right" neighbours appear above and below it.
+   */
   layout() {
     if (!this.game) return;
     const { width, height, layers } = this.bounds;
     const style = getComputedStyle(this.container);
     const availW = this.container.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
     const availH = this.container.clientHeight - parseFloat(style.paddingTop) - parseFloat(style.paddingBottom);
-    const cols = width / 2;
-    const rows = height / 2;
-    const tw = Math.min(
+    const fit = (cols, rows) => Math.min(
       MAX_TILE_W,
       availW / (cols + DEPTH_RATIO * layers),
       availH / (rows * TILE_RATIO + DEPTH_RATIO * layers),
     );
+    const upright = fit(width / 2, height / 2);
+    const turned = fit(height / 2, width / 2);
+    this.rotated = turned > upright;
+    this.container.classList.toggle('rotated', this.rotated);
+
+    const cols = (this.rotated ? height : width) / 2;
+    const rows = (this.rotated ? width : height) / 2;
+    const tw = Math.max(upright, turned);
     const th = tw * TILE_RATIO;
     const d = tw * DEPTH_RATIO;
 
@@ -79,11 +91,14 @@ export class BoardView {
     const base = (layers - 1) * d;
     for (const slot of this.game.slots) {
       const el = this.els[slot.index];
-      el.style.left = `${(slot.x / 2) * tw + base - slot.z * d}px`;
-      el.style.top = `${(slot.y / 2) * th + base - slot.z * d}px`;
+      // Half-tile grid position on screen; a clockwise turn maps (x, y) to (H - 2 - y, x).
+      const x = this.rotated ? height - 2 - slot.y : slot.x;
+      const y = this.rotated ? slot.x : slot.y;
+      el.style.left = `${(x / 2) * tw + base - slot.z * d}px`;
+      el.style.top = `${(y / 2) * th + base - slot.z * d}px`;
       // Draw higher layers first, then lower rows and rightmost tiles on top,
       // so each tile's 3D side is covered by its neighbour.
-      el.style.zIndex = String(slot.z * 1000 + slot.y * 30 + slot.x);
+      el.style.zIndex = String(slot.z * 1000 + y * 30 + x);
     }
   }
 

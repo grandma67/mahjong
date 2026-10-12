@@ -65,7 +65,8 @@ function handleTileClick(index) {
 
   if (result.type === 'blocked') {
     view.flash(result.indices, 'shake');
-    toast('That tile is blocked: it needs a free left or right side and nothing on top.');
+    const sides = view.rotated ? 'top or bottom' : 'left or right';
+    toast(`That tile is blocked: it needs a free ${sides} side and nothing on top.`);
   } else if (result.type === 'mismatch') {
     view.flash([result.indices[0]], 'shake');
   } else if (result.type === 'select') {
@@ -335,6 +336,4 @@ if (!prefs.seenHelp) {
   prefs.seenHelp = true;
   savePrefs(prefs);
   openDialog('#help-dialog');
-} else if (matchMedia('(orientation: portrait) and (max-width: 600px)').matches) {
-  toast('Tip: turn your phone sideways for bigger tiles.');
 }
