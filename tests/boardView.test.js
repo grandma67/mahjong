@@ -45,7 +45,7 @@ before(async () => {
   ({ BoardView } = await import('../src/ui/boardView.js'));
 });
 
-function mountBoard({ width, height, layout = 'turtle', seed = 7, onTileClick = () => {} }) {
+function mountBoard({ width, height, layout = 'bridge', seed = 7, onTileClick = () => {} }) {
   const container = new FakeElement('main');
   container.clientWidth = width;
   container.clientHeight = height;
@@ -79,8 +79,8 @@ test('a tall phone screen turns a wide board clockwise for bigger tiles', () => 
   assert.equal(view.rotated, true);
   assert.ok(container.classList.contains('rotated'));
 
-  // Upright, the 15-tile-wide turtle would only get about 390 / 15.65 = 25px tiles.
-  assert.ok(px(view.surface.style.vars['--tw']) > 30);
+  // Upright, the 12-tile-wide bridge would only get about 390 / 12.4 = 31px tiles.
+  assert.ok(px(view.surface.style.vars['--tw']) > 40);
 
   // Clockwise: moving right in the layout moves down on screen; moving down moves left.
   const row0 = game.slots.filter((s) => s.z === 0 && s.y === 0);
@@ -131,7 +131,7 @@ for (const [name, size] of [['upright', { width: 1200, height: 700 }], ['turned'
   });
 }
 
-for (const [name, size] of [['turtle turned', { width: 390, height: 700 }], ['pyramid', { width: 1200, height: 700, layout: 'pyramid' }]]) {
+for (const [name, size] of [['bridge turned', { width: 390, height: 700 }], ['pyramid', { width: 1200, height: 700, layout: 'pyramid' }]]) {
   test(`${name}: the board has no empty margin, so it centers and fills the screen`, () => {
     const { view, game } = mountBoard(size);
     const d = px(view.surface.style.vars['--d']);

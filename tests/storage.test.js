@@ -23,15 +23,15 @@ test('defaults when nothing is stored', () => {
     themeId: null, layoutId: null, highlightFree: true, showIndex: false, sound: true, ambience: true,
     bestTimes: {}, seenHelp: false,
   });
-  prefs.bestTimes.turtle = 1;
+  prefs.bestTimes.owl = 1;
   assert.deepEqual(loadPrefs().bestTimes, {}, 'defaults are not shared between loads');
 });
 
 test('saved prefs round-trip and merge over defaults', () => {
-  savePrefs({ themeId: 'neon', bestTimes: { turtle: 300 } });
+  savePrefs({ themeId: 'neon', bestTimes: { owl: 300 } });
   const prefs = loadPrefs();
   assert.equal(prefs.themeId, 'neon');
-  assert.deepEqual(prefs.bestTimes, { turtle: 300 });
+  assert.deepEqual(prefs.bestTimes, { owl: 300 });
   assert.equal(prefs.highlightFree, true, 'missing keys come from defaults');
   assert.ok(store.has(KEY));
 });

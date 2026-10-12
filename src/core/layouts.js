@@ -1,12 +1,13 @@
 /**
  * Board layouts.
  *
- * Coordinates use half-tile units, so layouts can offset tiles by half a tile
- * (like the Turtle's side wings and top tile). A tile at (x, y) covers
- * [x, x + 2) × [y, y + 2) on layer z.
+ * Coordinates use half-tile units, so layouts can offset tiles by half a tile.
+ * A tile at (x, y) covers [x, x + 2) × [y, y + 2) on layer z.
  *
- * Layouts are written in whole-tile units with `rect()`, which handles the
- * conversion, so adding a new layout only takes a few lines of data.
+ * Layouts are written in whole-tile units, either as blocks with `rect()` or
+ * drawn as a height map with `heights()`, so adding a layout only takes a few
+ * lines of data. Shapes are about 8 tiles wide by 12 tall (or 12 by 8, which
+ * the board turns on a phone), the proportions that fill a phone screen.
  */
 
 /** A block of tiles. col/row/cols/rows are in tile units (halves allowed). */
@@ -20,8 +21,19 @@ function rect(col, row, cols, rows, z = 0) {
   return slots;
 }
 
-/** One row of `count` tiles starting at `col`. */
-const row = (col, rowIdx, count, z = 0) => rect(col, rowIdx, count, 1, z);
+/**
+ * A shape drawn as a height map: each character is one tile position, and its
+ * digit is how many tiles are stacked there ('.' for none).
+ */
+function heights(lines) {
+  const slots = [];
+  lines.forEach((line, row) => {
+    [...line].forEach((ch, col) => {
+      for (let z = 0; z < (Number(ch) || 0); z++) slots.push({ x: col * 2, y: row * 2, z });
+    });
+  });
+  return slots;
+}
 
 function defineLayout({ id, name, difficulty, parts }) {
   const slots = parts.flat().map((s, index) => ({ ...s, index }));
@@ -30,19 +42,290 @@ function defineLayout({ id, name, difficulty, parts }) {
 
 export const LAYOUTS = Object.freeze([
   defineLayout({
-    id: 'turtle',
-    name: 'Turtle',
-    difficulty: 'Classic',
+    id: 'owl',
+    name: 'Owl',
+    difficulty: 'Medium',
     parts: [
-      // Layer 0: 87 tiles
-      row(1, 0, 12), row(3, 1, 8), row(2, 2, 10), row(1, 3, 12),
-      row(1, 4, 12), row(2, 5, 10), row(3, 6, 8), row(1, 7, 12),
-      rect(0, 3.5, 1, 1), rect(13, 3.5, 1, 1), rect(14, 3.5, 1, 1),
-      // Upper layers: 36 + 16 + 4 + 1
-      rect(4, 1, 6, 6, 1),
-      rect(5, 2, 4, 4, 2),
-      rect(6, 3, 2, 2, 3),
-      rect(6.5, 3.5, 1, 1, 4),
+      heights([
+        '11....11',
+        '121..121',
+        '12222221',
+        '23322332',
+        '23322332',
+        '23322332',
+        '12233221',
+        '.123321.',
+        '.123321.',
+        '.122221.',
+        '..1111..',
+        '.11..11.',
+      ]),
+    ],
+  }),
+  defineLayout({
+    id: 'rocket',
+    name: 'Rocket',
+    difficulty: 'Medium',
+    parts: [
+      heights([
+        '...11...',
+        '..1221..',
+        '..2332..',
+        '.123321.',
+        '.134431.',
+        '.134431.',
+        '.134431.',
+        '.123321.',
+        '11233211',
+        '12233221',
+        '12.33.21',
+        '1..22..1',
+      ]),
+    ],
+  }),
+  defineLayout({
+    id: 'cat',
+    name: 'Cat',
+    difficulty: 'Medium',
+    parts: [
+      heights([
+        '1......1',
+        '21....12',
+        '22111122',
+        '12222221',
+        '13233231',
+        '12244221',
+        '.122221.',
+        '..1111..',
+        '.122221.',
+        '12333321',
+        '12333321',
+        '11111111',
+      ]),
+    ],
+  }),
+  defineLayout({
+    id: 'arrow',
+    name: 'Arrow',
+    difficulty: 'Easy',
+    parts: [
+      heights([
+        '...11...',
+        '..1221..',
+        '.123321.',
+        '12344321',
+        '11344311',
+        '..1331..',
+        '..1441..',
+        '..1441..',
+        '..1441..',
+        '.122221.',
+        '121..121',
+        '11....11',
+      ]),
+    ],
+  }),
+  defineLayout({
+    id: 'hourglass',
+    name: 'Hourglass',
+    difficulty: 'Easy',
+    parts: [
+      heights([
+        '11111111',
+        '12222221',
+        '12333321',
+        '.123321.',
+        '..1221..',
+        '...11...',
+        '...11...',
+        '..1221..',
+        '.123321.',
+        '12333321',
+        '12222221',
+        '11111111',
+      ]),
+    ],
+  }),
+  defineLayout({
+    id: 'lighthouse',
+    name: 'Lighthouse',
+    difficulty: 'Hard',
+    parts: [
+      heights([
+        '..1111..',
+        '.123321.',
+        '..1221..',
+        '..2332..',
+        '..2442..',
+        '..2332..',
+        '.123321.',
+        '.123321.',
+        '.134431.',
+        '12344321',
+        '12333321',
+        '11111111',
+      ]),
+    ],
+  }),
+  defineLayout({
+    id: 'tree',
+    name: 'Pine Tree',
+    difficulty: 'Medium',
+    parts: [
+      heights([
+        '...11...',
+        '..1221..',
+        '.123321.',
+        '..1221..',
+        '.123321.',
+        '12344321',
+        '.123321.',
+        '12344321',
+        '12344321',
+        '...22...',
+        '...33...',
+        '.111111.',
+      ]),
+    ],
+  }),
+  defineLayout({
+    id: 'vase',
+    name: 'Vase',
+    difficulty: 'Hard',
+    parts: [
+      heights([
+        '.111111.',
+        '..1221..',
+        '...22...',
+        '..1221..',
+        '.123321.',
+        '12344321',
+        '12344321',
+        '12344321',
+        '.123321.',
+        '..1221..',
+        '.112211.',
+        '11111111',
+      ]),
+    ],
+  }),
+  defineLayout({
+    id: 'castle',
+    name: 'Castle',
+    difficulty: 'Medium',
+    parts: [
+      heights([
+        '33.111111.33',
+        '332111111233',
+        '.1........1.',
+        '.1.234432.1.',
+        '.1.234432.1.',
+        '.1........1.',
+        '332111111233',
+        '33.111111.33',
+      ]),
+    ],
+  }),
+  defineLayout({
+    id: 'butterfly',
+    name: 'Butterfly',
+    difficulty: 'Medium',
+    parts: [
+      heights([
+        '111......111',
+        '12211..11221',
+        '122221122221',
+        '.1233443321.',
+        '.1233443321.',
+        '122221122221',
+        '12211..11221',
+        '111......111',
+      ]),
+    ],
+  }),
+  defineLayout({
+    id: 'crab',
+    name: 'Crab',
+    difficulty: 'Easy',
+    parts: [
+      heights([
+        '11........11',
+        '121......121',
+        '.11.1111.11.',
+        '..12333321..',
+        '.1234444321.',
+        '1.12333321.1',
+        '.1.111111.1.',
+        '1.1......1.1',
+      ]),
+    ],
+  }),
+  defineLayout({
+    id: 'spider',
+    name: 'Spider',
+    difficulty: 'Easy',
+    parts: [
+      heights([
+        '1...1..1...1',
+        '.1..1..1..1.',
+        '..11233211..',
+        '.1123443211.',
+        '.1123443211.',
+        '..11233211..',
+        '.1..1..1..1.',
+        '1...1..1...1',
+      ]),
+    ],
+  }),
+  defineLayout({
+    id: 'arena',
+    name: 'Arena',
+    difficulty: 'Medium',
+    parts: [
+      heights([
+        '..22222222..',
+        '.3222222223.',
+        '321111111123',
+        '321......123',
+        '321......123',
+        '321111111123',
+        '.3222222223.',
+        '..22222222..',
+      ]),
+    ],
+  }),
+  defineLayout({
+    id: 'bridge',
+    name: 'Bridge',
+    difficulty: 'Hard',
+    parts: [
+      heights([
+        '222......222',
+        '232......232',
+        '232......232',
+        '222222222222',
+        '222222222222',
+        '232......232',
+        '232......232',
+        '222......222',
+      ]),
+    ],
+  }),
+  defineLayout({
+    id: 'fish',
+    name: 'Fish',
+    difficulty: 'Medium',
+    parts: [
+      heights([
+        '...1111.....',
+        '..122221..11',
+        '.12333321.12',
+        '123444332112',
+        '123444332112',
+        '.12333321.12',
+        '..122221..11',
+        '...1111.....',
+      ]),
     ],
   }),
   defineLayout({
@@ -94,7 +377,7 @@ export const LAYOUTS = Object.freeze([
   }),
 ]);
 
-export const DEFAULT_LAYOUT_ID = 'turtle';
+export const DEFAULT_LAYOUT_ID = 'owl';
 
 export function getLayout(id) {
   return LAYOUTS.find((l) => l.id === id) ?? LAYOUTS.find((l) => l.id === DEFAULT_LAYOUT_ID);

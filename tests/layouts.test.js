@@ -1,21 +1,22 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { LAYOUTS, getLayout } from '../src/core/layouts.js';
+import { LAYOUTS, getLayout, DEFAULT_LAYOUT_ID } from '../src/core/layouts.js';
 import { buildGeometry, isFree, bounds } from '../src/core/board.js';
 
-test('turtle has the classic 144 tiles', () => {
-  assert.equal(getLayout('turtle').slots.length, 144);
+test('the default layout uses the full 144-tile set', () => {
+  assert.equal(getLayout(DEFAULT_LAYOUT_ID).slots.length, 144);
 });
 
 test('unknown layout ids fall back to the default', () => {
-  assert.equal(getLayout('nope').id, 'turtle');
+  assert.equal(getLayout('nope').id, DEFAULT_LAYOUT_ID);
+  assert.equal(getLayout('turtle').id, DEFAULT_LAYOUT_ID, 'old links and saved prefs still load');
 });
 
 for (const layout of LAYOUTS) {
   test(`layout "${layout.id}" is well formed`, () => {
     const { slots } = layout;
     assert.equal(slots.length % 2, 0, 'needs an even number of tiles');
-    assert.ok(slots.length <= 144 * 2);
+    assert.ok(slots.length <= 144, 'fits in one tile set');
 
     for (const a of slots) {
       for (const b of slots) {

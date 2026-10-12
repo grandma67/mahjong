@@ -18,11 +18,14 @@ with four of each, four each of the 4 Winds and 3 Dragons, and one each of 4 Flo
 slots, then gives each pair matching faces. Shuffles are dealt the same way.
 
 Keyboard: `H` hint · `U` / `Ctrl+Z` undo · `S` shuffle · `N` new game · `R` restart · `M` mute · `Esc` deselect.
-Each deal has a shareable URL such as `#turtle-1234`.
+Each deal has a shareable URL such as `#owl-1234`.
 
 ## Features
 
-- 5 layouts: Turtle (classic, 144 tiles), Pyramid, Fortress, Cross, Garden
+- 19 layouts. Most are shaped about 8 tiles wide by 12 tall (or 12 by 8) so they fill a phone screen:
+  - Tall: Owl (the default, all 144 tiles), Rocket, Cat, Arrow, Hourglass, Lighthouse, Pine Tree, Vase
+  - Wide: Castle, Butterfly, Crab, Spider, Arena, Bridge, Fish. On a phone held upright these are drawn turned 90°.
+  - Classic blocks: Pyramid, Fortress, Cross, Garden
 - 7 themes: Jade Classic, Midnight, Sakura, Ocean Breeze, Imperial Ember, Neon Arcade, Emoji Garden
 - 2 face sets: traditional tiles drawn as SVG in code, and emoji
 - Hints, unlimited undo (including shuffles), solvable reshuffle, timer, best time per layout
@@ -66,8 +69,12 @@ colors are token names. Tests check that every theme defines the same tokens and
 
 ### Adding a layout
 
-Add a `defineLayout({...})` entry in `src/core/layouts.js` using the `rect()` / `row()` helpers.
-Tests check that the tile count is even, that nothing overlaps, that no tile floats, and that deals can be solved.
+Add a `defineLayout({...})` entry in `src/core/layouts.js`. The easiest way is to draw it with
+`heights()`: one string per row, where each digit is how many tiles are stacked there and `.` is empty.
+`rect()` adds blocks, including half-tile offsets. Keep shapes about 8 wide by 12 tall (or 12 by 8) so
+they fill a phone screen, and use at most 144 tiles, so each deal fits in one tile set.
+Tests check that the tile count is even and at most 144, that nothing overlaps, that no tile floats,
+and that deals can be solved.
 
 ### Adding a face set
 

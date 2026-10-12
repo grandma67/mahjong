@@ -19,7 +19,7 @@
     { "src": "assets/icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
   ],
   "screenshots": [
-    { "src": "assets/screenshots/wide.png", "sizes": "1280x720", "type": "image/png", "form_factor": "wide", "label": "The classic Turtle layout" },
-    { "src": "assets/screenshots/narrow.png", "sizes": "720x1280", "type": "image/png", "form_factor": "narrow", "label": "Garden layout on a phone" }
+    { "src": "assets/screenshots/wide.png", "sizes": "1280x720", "type": "image/png", "form_factor": "wide", "label": "The Castle layout" },
+    { "src": "assets/screenshots/narrow.png", "sizes": "720x1280", "type": "image/png", "form_factor": "narrow", "label": "The Owl layout on a phone" }
   ]
 }

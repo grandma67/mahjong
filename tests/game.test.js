@@ -16,14 +16,14 @@ function autoplay(game) {
 }
 
 test('same seed produces the same deal', () => {
-  const a = new Game(getLayout('turtle'), 42);
-  const b = new Game(getLayout('turtle'), 42);
+  const a = new Game(getLayout('owl'), 42);
+  const b = new Game(getLayout('owl'), 42);
   assert.deepEqual(a.tiles, b.tiles);
-  assert.notDeepEqual(a.tiles, new Game(getLayout('turtle'), 43).tiles);
+  assert.notDeepEqual(a.tiles, new Game(getLayout('owl'), 43).tiles);
 });
 
-test('turtle deal uses exactly the full 144-tile set', () => {
-  const g = new Game(getLayout('turtle'), 1);
+test('owl deal uses exactly the full 144-tile set', () => {
+  const g = new Game(getLayout('owl'), 1);
   assert.deepEqual([...g.tiles].sort(), fullSet().sort());
 });
 
@@ -58,7 +58,7 @@ test('selecting blocked, matching and mismatching tiles', () => {
 });
 
 test('undo restores matches and shuffles', () => {
-  const g = new Game(getLayout('turtle'), 9);
+  const g = new Game(getLayout('owl'), 9);
   const original = [...g.tiles];
   const [a, b] = g.hint();
   g.select(a); g.select(b);
@@ -79,14 +79,43 @@ test('shuffle keeps the same multiset of tiles', () => {
   assert.deepEqual(g.tiles.filter(Boolean).sort(), before);
 });
 
-test('a game can be played to completion with hints + shuffles', () => {
+test('every layout can be finished with hints, shuffles and undo', () => {
   for (const layout of LAYOUTS) {
-    const g = new Game(layout, 11);
-    let rounds = 0;
-    while (autoplay(g) === STATUS.STUCK && rounds++ < 20) g.shuffle();
-    assert.equal(g.status, STATUS.WON, `${layout.id} should be finishable`);
-    assert.equal(g.tilesLeft, 0);
+    for (const seed of [8, 9, 11]) {
+      const g = new Game(layout, seed);
+      let rounds = 0;
+      while (autoplay(g) === STATUS.STUCK && rounds++ < 30) {
+        // A dead end (e.g. the last two tiles stacked) needs an undo first.
+        while (!g.canBeCleared()) g.undo();
+        g.shuffle();
+      }
+      assert.equal(g.status, STATUS.WON, `${layout.id} #${seed} should be finishable`);
+    }
   }
+});
+
+/** Two free tiles in a row, then a two-tile stack, all with the same face. */
+const ROW_AND_STACK = {
+  id: 'row-and-stack',
+  name: 'Row and stack',
+  slots: [{ x: 4, y: 0, z: 0 }, { x: 6, y: 0, z: 0 }, { x: 0, y: 0, z: 0 }, { x: 0, y: 0, z: 1 }]
+    .map((s, index) => ({ ...s, index })),
+};
+
+test('a board whose last tiles are stacked is a dead end', () => {
+  const g = new Game(ROW_AND_STACK, 1);
+  g.tiles = g.tiles.map(() => 'dots-1');
+  assert.ok(g.canBeCleared());
+  g.removePair(0, 1);
+  assert.equal(g.status, STATUS.STUCK);
+  assert.equal(g.canBeCleared(), false, 'only the top tile of the stack is ever free');
+});
+
+test('hint never leads into a dead end when another pair avoids it', () => {
+  const g = new Game(ROW_AND_STACK, 1);
+  g.tiles = g.tiles.map(() => 'dots-1');
+  // Taking the two row tiles first would strand the stack; the hint must use the stack's top tile.
+  assert.ok(g.hint().includes(3));
 });
 
 /** Four tiles in a row: only the two ends are ever free. */
@@ -126,7 +155,7 @@ test('shuffle does nothing on an empty board', () => {
 });
 
 test('hint returns a playable pair and counts its use', () => {
-  const g = new Game(getLayout('turtle'), 21);
+  const g = new Game(getLayout('owl'), 21);
   const [a, b] = g.hint();
   assert.ok(g.isFree(a) && g.isFree(b) && a !== b);
   assert.ok(facesMatch(g.tiles[a], g.tiles[b]));
