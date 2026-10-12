@@ -42,6 +42,7 @@ body {
   color: var(--text);
   font-family: var(--font-ui);
   overflow: hidden;
+  overscroll-behavior: none;
   -webkit-tap-highlight-color: transparent;
   transition: background 0.4s ease, color 0.4s ease;
 }
@@ -56,7 +57,7 @@ button { font: inherit; color: inherit; }
   align-items: center;
   justify-content: space-between;
   gap: 8px 16px;
-  padding: max(8px, env(safe-area-inset-top)) 16px 8px;
+  padding: max(8px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) 8px max(16px, env(safe-area-inset-left));
   background: var(--panel);
   backdrop-filter: blur(8px);
   box-shadow: 0 1px 0 rgba(255, 255, 255, 0.06), 0 6px 20px rgba(0, 0, 0, 0.2);
@@ -65,7 +66,7 @@ button { font: inherit; color: inherit; }
 }
 
 .brand { display: flex; align-items: baseline; gap: 8px; }
-.brand-mark { font-size: 1.5rem; line-height: 1; align-self: center; }
+.brand-mark { width: 28px; height: 28px; align-self: center; }
 .brand h1 { margin: 0; font-size: 1.35rem; font-weight: 700; letter-spacing: 0.04em; }
 .game-no { font-size: 0.85rem; opacity: 0.65; font-variant-numeric: tabular-nums; }
 
@@ -87,6 +88,13 @@ button { font: inherit; color: inherit; }
 .actions button:hover { background: color-mix(in srgb, var(--text) 16%, transparent); }
 .actions button:active { transform: scale(0.96); }
 .actions button:disabled { opacity: 0.4; cursor: default; }
+.actions button[hidden] { display: none; }
+.actions button[data-action='install'] { background: var(--accent); color: var(--accent-text); border-color: transparent; }
+
+/* Installed app: behave like a native app rather than a web page. */
+@media (display-mode: standalone) {
+  body { user-select: none; -webkit-user-select: none; }
+}
 .actions svg, .dialog svg {
   width: 18px; height: 18px;
   fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
@@ -123,6 +131,9 @@ button { font: inherit; color: inherit; }
   border: 0;
   background: none;
   cursor: pointer;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
   transition: transform 0.12s ease, filter 0.2s ease;
 }
 .tile:focus-visible { outline: none; }

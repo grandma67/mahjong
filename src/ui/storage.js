@@ -3,7 +3,8 @@
  * (private mode, blocked site data), so every access is guarded and the game
  * still works without it.
  */
-const KEY = 'mahjong-solitaire:v1';
+// Namespaced with the app id: localStorage is shared by every app on the origin (<user>.github.io).
+const KEY = 'rh-mahjong-solitaire:prefs:v1';
 
 const DEFAULTS = Object.freeze({
   themeId: null,

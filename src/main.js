@@ -10,6 +10,7 @@ import { THEMES, getTheme, applyTheme, themeStyle } from './ui/themes.js';
 import { renderFace } from './ui/faces/index.js';
 import { loadPrefs, savePrefs } from './ui/storage.js';
 import { Timer, formatTime } from './ui/timer.js';
+import { registerServiceWorker, setupInstall } from './pwa.js';
 
 const $ = (sel) => document.querySelector(sel);
 
@@ -138,6 +139,7 @@ const ACTIONS = {
     openDialog('#settings-dialog');
   },
   help: () => openDialog('#help-dialog'),
+  install: setupInstall($('[data-action="install"]')),
 };
 
 document.querySelector('.actions').addEventListener('click', (e) => {
@@ -292,6 +294,7 @@ window.addEventListener('hashchange', () => {
   if (h && (h.seed !== game.seed || h.layoutId !== game.layout.id)) startGame(h.layoutId, h.seed);
 });
 
+registerServiceWorker();
 setTheme(theme.id);
 applyIndexPref();
 const fromHash = readHash();
