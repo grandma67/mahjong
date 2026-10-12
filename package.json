@@ -1,0 +1,12 @@
+{
+  "name": "mahjong-solitaire",
+  "version": "1.0.0",
+  "description": "Themeable Mahjong Solitaire built with vanilla ES modules, ready for GitHub Pages.",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "test": "node --test tests/",
+    "start": "npx --yes http-server -c-1 -p 8080 ."
+  },
+  "license": "MIT"
+}
