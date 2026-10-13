@@ -4,7 +4,7 @@
  */
 import { Game, STATUS } from './core/game.js';
 import { SOLVE } from './core/solver.js';
-import { LAYOUTS, getLayout } from './core/layouts.js';
+import { LAYOUTS, getLayout, layoutsBySize } from './core/layouts.js';
 import { randomSeed } from './core/rng.js';
 import { BoardView } from './ui/boardView.js';
 import { THEMES, getTheme, applyTheme, themeStyle, ambienceFor } from './ui/themes.js';
@@ -438,7 +438,7 @@ function buildSettings() {
   const layoutList = $('#layout-list');
   layoutList.setAttribute('role', 'radiogroup');
   layoutList.replaceChildren(
-    ...LAYOUTS.map((l) =>
+    ...layoutsBySize().map((l) =>
       choiceButton({
         value: l.id,
         html: `<strong>${l.name}</strong><small>${l.slots.length} tiles · ${l.difficulty}</small>`,

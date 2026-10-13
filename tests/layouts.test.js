@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { LAYOUTS, getLayout, DEFAULT_LAYOUT_ID } from '../src/core/layouts.js';
+import { LAYOUTS, getLayout, layoutsBySize, DEFAULT_LAYOUT_ID } from '../src/core/layouts.js';
 import { buildGeometry, isFree, bounds } from '../src/core/board.js';
 
 test('the default layout uses the full 144-tile set', () => {
@@ -88,4 +88,17 @@ test('the 144- and 288-tile shapes are 8 by 12 tiles (or 12 by 8) to fit a phone
     const { width, height } = bounds(layout.slots);
     assert.deepEqual([width / 2, height / 2].sort((a, b) => a - b), [8, 12], id);
   }
+});
+
+test('the settings menu lists layouts by tile count, then by name', () => {
+  const sorted = layoutsBySize();
+  assert.equal(sorted.length, LAYOUTS.length);
+  for (let i = 1; i < sorted.length; i++) {
+    const [a, b] = [sorted[i - 1], sorted[i]];
+    const inOrder = a.slots.length < b.slots.length
+      || (a.slots.length === b.slots.length && a.name.localeCompare(b.name) <= 0);
+    assert.ok(inOrder, `${a.name} (${a.slots.length}) comes before ${b.name} (${b.slots.length})`);
+  }
+  const ties = sorted.filter((l) => l.slots.length === 144).map((l) => l.name);
+  assert.deepEqual(ties, ['Dragon', 'Owl', 'Pagoda', 'Rhombus', 'Two Towers']);
 });

@@ -534,6 +534,11 @@ export const LAYOUTS = Object.freeze([
   }),
 ]);
 
+/** Layouts in menu order: fewest tiles first, then by name. */
+export function layoutsBySize(layouts = LAYOUTS) {
+  return [...layouts].sort((a, b) => a.slots.length - b.slots.length || a.name.localeCompare(b.name));
+}
+
 export const DEFAULT_LAYOUT_ID = 'owl';
 
 export function getLayout(id) {
