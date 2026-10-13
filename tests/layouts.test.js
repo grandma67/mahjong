@@ -77,7 +77,10 @@ test('bounds covers the whole layout in half-tile units', () => {
 });
 
 test('the 144- and 288-tile shapes are 8 by 12 tiles (or 12 by 8) to fit a phone', () => {
-  const sizes = { towers: 144, rhombus: 144, ziggurat: 288, volcano: 288 };
+  const sizes = {
+    towers: 144, rhombus: 144, pagoda: 144, dragon: 144,
+    ziggurat: 288, volcano: 288, temple: 288, wall: 288,
+  };
   for (const [id, count] of Object.entries(sizes)) {
     const layout = getLayout(id);
     assert.equal(layout.id, id);
