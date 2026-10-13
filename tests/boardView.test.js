@@ -201,3 +201,25 @@ test('changing the face set re-renders every face', () => {
   view.setFaceSet('emoji');
   assert.notEqual(view.els[0].body.innerHTML, before);
 });
+
+// Pixel 7a: 1080×2400 screen at device pixel ratio 2.625, so pages get 412×915
+// CSS px. Chrome's bars leave about 412×839, and the top bar takes 79 of that
+// (upright) or 40 (sideways). Minus the board's 4px padding, that is the room below.
+const PIXEL_7A = [['upright', { width: 404, height: 752 }], ['sideways', { width: 831, height: 364 }]];
+for (const [orientation, size] of PIXEL_7A) {
+  test(`Pixel 7a ${orientation}: every layout fits on screen with readable tiles`, async () => {
+    const { LAYOUTS } = await import('../src/core/layouts.js');
+    for (const layout of LAYOUTS) {
+      const { view, game } = mountBoard({ ...size, layout: layout.id });
+      const tw = px(view.surface.style.vars['--tw']);
+      assert.ok(tw >= 26, `${layout.id}: tiles are only ${tw.toFixed(1)}px wide`);
+      assert.ok(px(view.surface.style.width) <= size.width + 0.01, `${layout.id} is wider than the screen`);
+      assert.ok(px(view.surface.style.height) <= size.height + 0.01, `${layout.id} is taller than the screen`);
+      for (const s of game.slots) {
+        const b = box(view, s);
+        assert.ok(b.left >= -0.01 && b.top >= -0.01 && b.right <= size.width + 0.01 && b.bottom <= size.height + 0.01,
+          `${layout.id}: slot ${s.index} is off screen`);
+      }
+    }
+  });
+}
