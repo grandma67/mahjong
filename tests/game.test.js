@@ -27,6 +27,40 @@ test('owl deal uses exactly the full 144-tile set', () => {
   assert.deepEqual([...g.tiles].sort(), fullSet().sort());
 });
 
+for (const id of ['ziggurat', 'volcano']) {
+  test(`"${id}" deals exactly two full 144-tile sets`, () => {
+    const twoSets = [...fullSet(), ...fullSet()].sort();
+    for (let seed = 1; seed <= 5; seed++) {
+      const g = new Game(getLayout(id), seed);
+      assert.equal(g.tilesLeft, 288);
+      assert.deepEqual([...g.tiles].sort(), twoSets, `seed ${seed}`);
+    }
+  });
+}
+
+test('a 288-tile board can be finished by following its hints, and shuffled midway', () => {
+  const g = new Game(getLayout('ziggurat'), 5);
+  for (let k = 0; k < 40; k++) {
+    const [a, b] = g.hint();
+    g.select(a);
+    assert.equal(g.select(b).type, 'match');
+  }
+  // With eight of every flower and season left to pair up, a shuffle must
+  // still keep the same tiles and leave a board that can be cleared.
+  const before = g.tiles.filter(Boolean).sort();
+  g.shuffle();
+  assert.deepEqual(g.tiles.filter(Boolean).sort(), before);
+  assert.ok(g.canBeCleared());
+
+  let rounds = 0;
+  while (autoplay(g) === STATUS.STUCK && rounds++ < 30) {
+    while (!g.canBeCleared()) g.undo();
+    g.shuffle();
+  }
+  assert.equal(g.status, STATUS.WON);
+  assert.equal(g.matchesMade, 144);
+});
+
 for (const layout of LAYOUTS) {
   test(`deals for "${layout.id}" are generated solvable`, () => {
     for (let seed = 1; seed <= 25; seed++) {

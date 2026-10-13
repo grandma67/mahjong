@@ -50,3 +50,9 @@ test('pickPairs never deals more copies of a face than the set has', () => {
     for (const [id, n] of counts) assert.ok(n <= FACES.find((f) => f.id === id).copies, id);
   }
 });
+
+test('pickPairs deals a 288-slot layout as exactly two full sets', () => {
+  const counts = new Map();
+  for (const id of pickPairs(144, createRng(7)).flat()) counts.set(id, (counts.get(id) ?? 0) + 1);
+  for (const f of FACES) assert.equal(counts.get(f.id), f.copies * 2, f.id);
+});
