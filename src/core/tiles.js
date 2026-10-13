@@ -72,10 +72,24 @@ export function allPairs() {
 
 /**
  * Picks `count` pairs for a layout. Layouts with fewer than 144 slots get a
- * random subset. Layouts with more cycle through the set again.
+ * random subset, but one that still shows every kind of tile: one pair per
+ * match group comes first (36 pairs, so 72 slots), then random pairs fill
+ * the rest. Layouts with more than 144 slots cycle through the set again.
  */
 export function pickPairs(count, rng) {
   const base = allPairs();
+  if (count < base.length) {
+    const shuffled = rng.shuffle(base.map((p) => [...p]));
+    const seen = new Set();
+    const firsts = [];
+    const rest = [];
+    for (const pair of shuffled) {
+      const group = getFace(pair[0]).matchGroup;
+      (seen.has(group) ? rest : firsts).push(pair);
+      seen.add(group);
+    }
+    return rng.shuffle([...firsts, ...rest].slice(0, count));
+  }
   const result = [];
   while (result.length < count) {
     const batch = rng.shuffle(base.map((p) => [...p]));

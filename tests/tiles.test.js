@@ -32,3 +32,21 @@ test('pickPairs returns the requested count, deterministic per seed', () => {
   assert.equal(pickPairs(90, createRng(1)).length, 90);
   assert.deepEqual(pickPairs(10, createRng(7)), pickPairs(10, createRng(7)));
 });
+
+test('pickPairs shows every kind of tile on layouts of 72 slots or more', () => {
+  const groups = new Set(FACES.map((f) => f.matchGroup));
+  for (let seed = 1; seed <= 200; seed++) {
+    const ids = pickPairs(36, createRng(seed)).flat();
+    const seen = new Set(ids.map((id) => FACES.find((f) => f.id === id).matchGroup));
+    assert.deepEqual([...seen].sort(), [...groups].sort());
+    assert.ok(ids.includes('wind-north'));
+  }
+});
+
+test('pickPairs never deals more copies of a face than the set has', () => {
+  for (const count of [36, 50, 71]) {
+    const counts = new Map();
+    for (const id of pickPairs(count, createRng(count)).flat()) counts.set(id, (counts.get(id) ?? 0) + 1);
+    for (const [id, n] of counts) assert.ok(n <= FACES.find((f) => f.id === id).copies, id);
+  }
+});
