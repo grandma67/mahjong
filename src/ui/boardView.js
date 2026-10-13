@@ -10,6 +10,9 @@ import { renderFace, describeFace } from './faces/index.js';
 const TILE_RATIO = 1.32;   // height / width
 const DEPTH_RATIO = 0.13;  // layer offset / width
 const MAX_TILE_W = 84;
+// Room kept on each side of the board for the rails, in tile widths, so the
+// gap between rails and tiles grows with the tiles.
+const RAIL_RATIO = 0.25;
 
 // Tile corner in tile widths: higher layers shift up and to the left.
 const tileLeft = (x, z) => x / 2 - z * DEPTH_RATIO;
@@ -21,6 +24,15 @@ export class BoardView {
     this.surface = document.createElement('div');
     this.surface.className = 'board-surface';
     container.replaceChildren(this.surface);
+    // Two lines along the board's long edges (top and bottom, or left and
+    // right when turned) show which way the rows run: tiles are only ever
+    // blocked by neighbours along the rails, never across them.
+    this.rails = ['start', 'end'].map((end) => {
+      const rail = document.createElement('div');
+      rail.className = `board-rail rail-${end}`;
+      rail.setAttribute('aria-hidden', 'true');
+      return rail;
+    });
     this.surface.addEventListener('click', (e) => {
       const btn = e.target.closest('.tile');
       if (btn) onTileClick(Number(btn.dataset.index));
@@ -46,7 +58,7 @@ export class BoardView {
       });
       return el;
     });
-    this.surface.replaceChildren(...this.els);
+    this.surface.replaceChildren(...this.rails, ...this.els);
     this.layout();
     this.update({ instant: true });
   }
@@ -63,23 +75,30 @@ export class BoardView {
    * drawn turned 90° clockwise if that gives bigger tiles. Only the drawing
    * turns: the faces stay upright and the game rules still use the original
    * layout, so a tile's "left and right" neighbours appear above and below it.
+   * The rails turn with the board, so room for them is kept above and below an
+   * upright board, or beside a turned one.
    */
   layout() {
     if (!this.game) return;
     const style = getComputedStyle(this.container);
     const availW = this.container.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
     const availH = this.container.clientHeight - parseFloat(style.paddingTop) - parseFloat(style.paddingBottom);
-    const fit = (box) => Math.min(MAX_TILE_W, availW / box.w, availH / box.h);
+    const fit = (box, rotated) => Math.min(
+      MAX_TILE_W,
+      availW / (box.w + (rotated ? 2 * RAIL_RATIO : 0)),
+      availH / (box.h + (rotated ? 0 : 2 * RAIL_RATIO)),
+    );
     const upright = this.extent(false);
     const turned = this.extent(true);
-    this.rotated = fit(turned) > fit(upright);
+    this.rotated = fit(turned, true) > fit(upright, false);
     this.container.classList.toggle('rotated', this.rotated);
 
     const box = this.rotated ? turned : upright;
-    const tw = fit(box);
+    const tw = fit(box, this.rotated);
     this.surface.style.setProperty('--tw', `${tw}px`);
     this.surface.style.setProperty('--th', `${tw * TILE_RATIO}px`);
     this.surface.style.setProperty('--d', `${tw * DEPTH_RATIO}px`);
+    this.surface.style.setProperty('--rail', `${tw * RAIL_RATIO}px`);
     this.surface.style.width = `${box.w * tw}px`;
     this.surface.style.height = `${box.h * tw}px`;
 

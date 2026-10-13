@@ -181,6 +181,35 @@ html.no-ambience body::before, html.no-ambience .ambience { display: none; }
 
 .board-surface { position: relative; }
 
+/*
+ * Rails along the board's top and bottom (left and right when the board is
+ * turned) show which way the rows run. They sit at the outer edge of the
+ * --rail gap that BoardView keeps outside the surface, in the theme's accent
+ * color. The end rail is darker, and each rail stays on its edge of the shape
+ * when the board turns clockwise (top goes right), so it shows which way the
+ * shape faces.
+ */
+.board-rail {
+  position: absolute;
+  pointer-events: none;
+  border-radius: 2px;
+  --rail-color: var(--accent);
+  background: linear-gradient(90deg, transparent, var(--rail-color) 12% 88%, transparent);
+  inset: auto 0;
+  height: 3px;
+}
+.board-rail.rail-end { --rail-color: color-mix(in srgb, var(--accent) 55%, black); }
+.board-rail.rail-start { top: calc(var(--rail) * -1); }
+.board-rail.rail-end { bottom: calc(var(--rail) * -1); }
+.rotated .board-rail {
+  inset: 0 auto;
+  width: 3px;
+  height: auto;
+  background: linear-gradient(180deg, transparent, var(--rail-color) 12% 88%, transparent);
+}
+.rotated .board-rail.rail-start { right: calc(var(--rail) * -1); }
+.rotated .board-rail.rail-end { left: calc(var(--rail) * -1); }
+
 /* Small screens: every pixel goes to the tiles. */
 @media (max-width: 520px), (max-height: 520px) {
   .board {

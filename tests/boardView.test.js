@@ -105,6 +105,56 @@ test('turning back to a wide screen restores the upright board', () => {
   assert.equal(container.classList.contains('rotated'), false);
 });
 
+// The rails sit in a gap of --rail px outside the surface, on the sides the board's rows run along.
+const railRoom = (view) => {
+  const rail = px(view.surface.style.vars['--rail']);
+  const w = px(view.surface.style.width) + (view.rotated ? 2 * rail : 0);
+  const h = px(view.surface.style.height) + (view.rotated ? 0 : 2 * rail);
+  return { rail, w, h };
+};
+
+test('the board draws two rails along its rows, out of the way of taps and screen readers', () => {
+  const { view } = mountBoard({ width: 1200, height: 700 });
+  const rails = view.surface.children.filter((el) => el.className.startsWith('board-rail'));
+  assert.deepEqual(rails.map((el) => el.className), ['board-rail rail-start', 'board-rail rail-end']);
+  for (const rail of rails) assert.equal(rail.getAttribute('aria-hidden'), 'true');
+  assert.equal(view.surface.children.filter((el) => el.className === 'tile').length, view.game.slots.length);
+  assert.ok(railRoom(view).rail > 0);
+});
+
+test('the gap between rails and tiles grows with the tiles', () => {
+  const small = mountBoard({ width: 404, height: 364, layout: 'cross' }).view;
+  const big = mountBoard({ width: 404, height: 752, layout: 'garden' }).view;
+  const gap = (view) => railRoom(view).rail / px(view.surface.style.vars['--tw']);
+  assert.ok(Math.abs(gap(small) - gap(big)) < 1e-9, 'same share of a tile');
+  assert.ok(railRoom(big).rail > railRoom(small).rail);
+  // A Garden board on an upright phone leaves clear space between tiles and rails.
+  assert.ok(railRoom(big).rail >= 12, `gap is only ${railRoom(big).rail}px`);
+});
+
+test('a new game keeps the rails', () => {
+  const { view } = mountBoard({ width: 1200, height: 700 });
+  view.mount(new Game(getLayout('garden'), 3), 'traditional');
+  assert.equal(view.surface.children.filter((el) => el.className.startsWith('board-rail')).length, 2);
+});
+
+for (const [name, size, rotated] of [
+  ['upright board: rails above and below', { width: 1200, height: 700, layout: 'garden' }, false],
+  ['turned board: rails left and right', { width: 390, height: 700, layout: 'garden' }, true],
+  ['tight upright fit still leaves room for the rails', { width: 2000, height: 400, layout: 'garden' }, false],
+  ['tight turned fit still leaves room for the rails', { width: 300, height: 2000, layout: 'garden' }, true],
+]) {
+  test(name, () => {
+    const { view, container } = mountBoard(size);
+    assert.equal(view.rotated, rotated);
+    // CSS puts the rails on the left and right only when the container is marked rotated.
+    assert.equal(container.classList.contains('rotated'), rotated);
+    const { w, h } = railRoom(view);
+    assert.ok(w <= size.width + 0.01, `board and rails are ${w}px wide`);
+    assert.ok(h <= size.height + 0.01, `board and rails are ${h}px tall`);
+  });
+}
+
 test('tiles never grow past the maximum size', () => {
   const { view } = mountBoard({ width: 5000, height: 4000 });
   assert.equal(px(view.surface.style.vars['--tw']), 84);
@@ -215,6 +265,8 @@ for (const [orientation, size] of PIXEL_7A) {
       assert.ok(tw >= 26, `${layout.id}: tiles are only ${tw.toFixed(1)}px wide`);
       assert.ok(px(view.surface.style.width) <= size.width + 0.01, `${layout.id} is wider than the screen`);
       assert.ok(px(view.surface.style.height) <= size.height + 0.01, `${layout.id} is taller than the screen`);
+      const room = railRoom(view);
+      assert.ok(room.w <= size.width + 0.01 && room.h <= size.height + 0.01, `${layout.id}: rails are off screen`);
       for (const s of game.slots) {
         const b = box(view, s);
         assert.ok(b.left >= -0.01 && b.top >= -0.01 && b.right <= size.width + 0.01 && b.bottom <= size.height + 0.01,
