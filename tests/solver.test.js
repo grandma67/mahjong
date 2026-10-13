@@ -24,7 +24,7 @@ function board(positions) {
   return buildGeometry(positions.map(([x, y, z], index) => ({ index, x, y, z })));
 }
 
-for (const id of ['owl', 'rhombus', 'castle', 'ziggurat']) {
+for (const id of ['owl', 'rhombus', 'castle', 'ziggurat', 'wall']) {
   test(`solves fresh "${id}" deals with legal moves that clear the board`, () => {
     for (let seed = 1; seed <= 3; seed++) {
       const game = new Game(getLayout(id), seed);
