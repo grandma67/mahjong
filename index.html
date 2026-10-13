@@ -29,6 +29,8 @@
     <symbol id="i-undo" viewBox="0 0 24 24"><path d="M9 14 4 9l5-5M4 9h10a6 6 0 0 1 0 12h-3"/></symbol>
     <symbol id="i-hint" viewBox="0 0 24 24"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3Z"/></symbol>
     <symbol id="i-shuffle" viewBox="0 0 24 24"><path d="M16 3h5v5M4 20 21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/></symbol>
+    <symbol id="i-solve" viewBox="0 0 24 24"><path d="m4 20 11-11M13 7l4 4M17 3v3M15.5 4.5h3M20 8v2M19 9h2M9 3v2M8 4h2"/></symbol>
+    <symbol id="i-stop" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/></symbol>
     <symbol id="i-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/></symbol>
     <symbol id="i-sound" viewBox="0 0 24 24"><path d="M11 5 6 9H3v6h3l5 4V5ZM15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></symbol>
     <symbol id="i-mute" viewBox="0 0 24 24"><path d="M11 5 6 9H3v6h3l5 4V5ZM16 9l6 6M22 9l-6 6"/></symbol>
@@ -57,6 +59,7 @@
       <button type="button" data-action="undo" title="Undo (U / Ctrl+Z)"><svg><use href="#i-undo"/></svg><span>Undo</span></button>
       <button type="button" data-action="hint" title="Hint (H)"><svg><use href="#i-hint"/></svg><span>Hint</span></button>
       <button type="button" data-action="shuffle" title="Shuffle remaining tiles (S)"><svg><use href="#i-shuffle"/></svg><span>Shuffle</span></button>
+      <button type="button" data-action="solve" title="Auto-solve: watch the board being cleared (A)" aria-pressed="false"><svg><use href="#i-solve"/></svg><span>Solve</span></button>
       <button type="button" data-action="mute" title="Mute sounds (M)" aria-pressed="false"><svg><use href="#i-sound"/></svg><span>Sound</span></button>
       <button type="button" data-action="settings" title="Layout &amp; theme"><svg><use href="#i-settings"/></svg><span>Settings</span></button>
       <button type="button" data-action="help" title="How to play (?)"><svg><use href="#i-help"/></svg><span>Rules</span></button>
@@ -65,6 +68,14 @@
   </header>
 
   <main id="board" class="board" aria-label="Mahjong board"></main>
+
+  <div id="solver-panel" class="solver-panel" role="status" aria-live="polite" hidden>
+    <div class="solver-tiles" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+    <p class="solver-title">Searching for a solution…</p>
+    <p class="solver-detail" id="solver-detail">Thinking through every possible move</p>
+    <div class="solver-meter" aria-hidden="true"><span id="solver-meter"></span></div>
+    <button type="button" id="solver-cancel">Cancel</button>
+  </div>
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
@@ -100,6 +111,7 @@
         <li>Identical tiles match. Any <strong>Flower</strong> matches any other Flower, and any <strong>Season</strong> matches any other Season.</li>
         <li>You win when the board is empty. If no free pair is left, you are stuck. Undo, or shuffle the remaining tiles.</li>
         <li>Every new deal can be won.</li>
+        <li>Stuck? <strong>Solve</strong> searches for a way to clear the tiles left (for up to 10 seconds) and then plays it out, one highlighted pair at a time. Press it again to stop.</li>
       </ul>
       <h3>The 144 tiles</h3>
       <ul>
@@ -108,7 +120,7 @@
         <li><strong>Flowers</strong> and <strong>Seasons</strong>: one of each, four of each kind.</li>
       </ul>
       <h3>Keyboard</h3>
-      <p class="keys"><kbd>H</kbd> hint · <kbd>U</kbd>/<kbd>Ctrl Z</kbd> undo · <kbd>S</kbd> shuffle · <kbd>N</kbd> new · <kbd>R</kbd> restart · <kbd>M</kbd> mute · <kbd>Esc</kbd> deselect</p>
+      <p class="keys"><kbd>H</kbd> hint · <kbd>U</kbd>/<kbd>Ctrl Z</kbd> undo · <kbd>S</kbd> shuffle · <kbd>A</kbd> auto-solve · <kbd>N</kbd> new · <kbd>R</kbd> restart · <kbd>M</kbd> mute · <kbd>Esc</kbd> deselect</p>
       <div class="dialog-actions"><button class="primary" value="close" autofocus>Let's play</button></div>
     </form>
   </dialog>

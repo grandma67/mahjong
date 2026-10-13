@@ -32,6 +32,8 @@ export class Game {
     this.history = [];
     this.shuffles = 0;
     this.hintsUsed = 0;
+    /** Set once the auto-solver has played a move, so the win doesn't count as a best time. */
+    this.autoSolved = false;
   }
 
   // ---- queries -------------------------------------------------------------

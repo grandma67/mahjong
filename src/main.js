@@ -3,6 +3,7 @@
  * dialogs, keyboard shortcuts and persistence.
  */
 import { Game, STATUS } from './core/game.js';
+import { SOLVE } from './core/solver.js';
 import { LAYOUTS, getLayout } from './core/layouts.js';
 import { randomSeed } from './core/rng.js';
 import { BoardView } from './ui/boardView.js';
@@ -36,6 +37,7 @@ function readHash() {
 }
 
 function startGame(layoutId, seed = randomSeed()) {
+  stopSolver();
   const layout = getLayout(layoutId);
   game = new Game(layout, seed);
   prefs.layoutId = layout.id;
@@ -56,6 +58,7 @@ function refresh(hint = []) {
 
 function handleTileClick(index) {
   if (game.status === STATUS.WON) return;
+  stopSolver({ announce: true });
   const result = game.select(index);
   if (result.type === 'ignored') return;
   timer.start();
@@ -105,6 +108,16 @@ function checkEnd() {
 
 function recordWin() {
   const seconds = timer.seconds;
+  if (game.autoSolved) {
+    return showResult({
+      title: '🤖 Board cleared!',
+      text: `The auto-solver finished ${game.layout.name}. Best times only count boards you clear yourself, so try this deal again on your own?`,
+      actions: [
+        ['Play again', () => startGame(game.layout.id, game.seed), true],
+        ['New game', () => startGame(randomLayoutId(game.layout.id))],
+      ],
+    });
+  }
   const id = game.layout.id;
   const best = prefs.bestTimes[id];
   const isBest = best == null || seconds < best;
@@ -138,12 +151,14 @@ function randomLayoutId(currentId) {
 // ---- Toolbar actions -------------------------------------------------------
 
 function doUndo() {
+  stopSolver({ announce: true });
   if (!game.undo()) return toast('Nothing to undo.');
   refresh();
 }
 
 function doHint() {
   if (game.status === STATUS.WON) return;
+  stopSolver({ announce: true });
   const pair = game.hint();
   if (!pair) return toast('No moves left. Try Shuffle or Undo.');
   game.selected = null;
@@ -151,6 +166,7 @@ function doHint() {
 }
 
 function doShuffle() {
+  stopSolver({ announce: true });
   if (game.tilesLeft && !game.canBeCleared()) {
     return toast("Shuffling can't help here: the tiles left can never all be removed. Try Undo.");
   }
@@ -166,6 +182,7 @@ const ACTIONS = {
   undo: doUndo,
   hint: doHint,
   shuffle: doShuffle,
+  solve: toggleSolver,
   mute: () => setSound(!prefs.sound),
   settings: () => {
     syncSettings();
@@ -187,13 +204,186 @@ document.addEventListener('keydown', (e) => {
     return doUndo();
   }
   if (e.ctrlKey || e.metaKey || e.altKey) return;
-  const key = { h: 'hint', u: 'undo', s: 'shuffle', n: 'new', r: 'restart', m: 'mute', '?': 'help' }[e.key.toLowerCase()];
+  const key = { h: 'hint', u: 'undo', s: 'shuffle', a: 'solve', n: 'new', r: 'restart', m: 'mute', '?': 'help' }[e.key.toLowerCase()];
   if (key) ACTIONS[key]();
+  else if (e.key === 'Escape' && solving) stopSolver({ announce: true });
   else if (e.key === 'Escape' && game.selected != null) {
     game.selected = null;
     refresh();
   }
 });
+
+// ---- Auto-solver -----------------------------------------------------------
+
+/** The search may take at most this long, worker start-up included. */
+const SOLVE_BUDGET_MS = 10_000;
+const SOLVE_PANEL_DELAY_MS = 150;
+/** Playback pace: each pair glows like a hint for a while, then is removed. */
+const SOLVE_HINT_MS = 800;
+const SOLVE_GAP_MS = 250;
+
+/** The running solver: {phase:'searching'|'playing', stop()}, or null when idle. */
+let solving = null;
+
+function toggleSolver() {
+  if (solving) return stopSolver({ announce: true });
+  if (game.status === STATUS.WON) return;
+  searchForSolution();
+}
+
+/** Cancels a search or a playback in progress. */
+function stopSolver({ announce = false } = {}) {
+  if (!solving) return;
+  const { phase } = solving;
+  solving.stop();
+  solving = null;
+  syncSolveButton();
+  refresh();
+  if (announce) toast(phase === 'searching' ? 'Search cancelled.' : 'Auto-solver stopped.');
+}
+
+function syncSolveButton() {
+  const btn = $('[data-action="solve"]');
+  const on = solving != null;
+  btn.setAttribute('aria-pressed', String(on));
+  btn.title = on ? 'Stop the auto-solver (A)' : 'Auto-solve: watch the board being cleared (A)';
+  btn.querySelector('use').setAttribute('href', on ? '#i-stop' : '#i-solve');
+  btn.querySelector('span').textContent = on ? 'Stop' : 'Solve';
+}
+
+/** Searches in a Web Worker so the page stays responsive, and gives up after SOLVE_BUDGET_MS. */
+function searchForSolution() {
+  game.selected = null;
+  refresh();
+  let worker;
+  try {
+    worker = new Worker(new URL('./core/solverWorker.js', import.meta.url), { type: 'module' });
+  } catch {
+    return toast("The auto-solver can't run in this browser.");
+  }
+
+  const startedAt = Date.now();
+  let nodes = 0;
+  const panel = $('#solver-panel');
+  const detail = $('#solver-detail');
+  const showProgress = () => {
+    const secondsLeft = Math.max(0, Math.ceil((SOLVE_BUDGET_MS - (Date.now() - startedAt)) / 1000));
+    detail.textContent = nodes
+      ? `${nodes.toLocaleString()} positions explored · ${secondsLeft}s left`
+      : `Thinking through the ${game.tilesLeft} tiles left · ${secondsLeft}s left`;
+  };
+  const ticker = setInterval(showProgress, 250);
+  const deadline = setTimeout(() => finish({ status: SOLVE.TIMEOUT, nodes }), SOLVE_BUDGET_MS);
+  // Most boards solve in a blink: only show the waiting panel if the search takes a while.
+  const reveal = setTimeout(() => {
+    const meter = $('#solver-meter');
+    meter.style.animation = 'none';
+    void meter.offsetWidth; // restart the countdown bar
+    meter.style.animation = '';
+    meter.style.animationDuration = `${SOLVE_BUDGET_MS}ms`;
+    meter.style.animationDelay = `${startedAt - Date.now()}ms`;
+    showProgress();
+    panel.hidden = false;
+    document.documentElement.classList.add('solver-searching');
+  }, SOLVE_PANEL_DELAY_MS);
+
+  const run = {
+    phase: 'searching',
+    stop() {
+      clearInterval(ticker);
+      clearTimeout(deadline);
+      clearTimeout(reveal);
+      worker.terminate();
+      panel.hidden = true;
+      document.documentElement.classList.remove('solver-searching');
+    },
+  };
+  solving = run;
+  syncSolveButton();
+
+  function finish(result) {
+    if (solving !== run) return;
+    run.stop();
+    solving = null;
+    syncSolveButton();
+    showSolveResult(result);
+  }
+
+  worker.addEventListener('message', ({ data }) => {
+    if (data.type === 'progress') nodes = data.nodes;
+    else finish(data.result);
+  });
+  worker.addEventListener('error', (e) => {
+    e.preventDefault();
+    if (solving !== run) return;
+    stopSolver();
+    toast("The auto-solver can't run in this browser.");
+  });
+  // Leave the worker a little time to report back before the hard deadline.
+  worker.postMessage({ geometry: game.geometry, tiles: game.tiles, budgetMs: SOLVE_BUDGET_MS - 400 });
+}
+
+function showSolveResult(result) {
+  const left = game.tilesLeft;
+  const fixes = [
+    ['Undo', () => doUndo()],
+    ...(game.canBeCleared() ? [['Shuffle', () => doShuffle()]] : []),
+  ];
+  if (result.status === SOLVE.SOLVED) {
+    toast(`Solution found: ${result.moves.length} moves. Press Solve again to stop.`);
+    return playSolution(result.moves);
+  }
+  if (result.status === SOLVE.UNSOLVABLE) {
+    return showResult({
+      title: 'No solution from here',
+      text: `The auto-solver checked every way to play the ${left} tiles left: they can't all be cleared as they lie now. Undo a few moves, or shuffle the tiles left.`,
+      actions: [...fixes.map(([label, fn], i) => [label, fn, i === 0]), ['Keep playing', () => {}]],
+    });
+  }
+  showResult({
+    title: "⏳ Time's up",
+    text: `The auto-solver explored ${result.nodes.toLocaleString()} positions in ${SOLVE_BUDGET_MS / 1000} seconds without finding a way to clear the ${left} tiles left. There may be no solution, or it is buried too deep. Try a few moves, Undo or Shuffle, then solve again.`,
+    actions: [['Keep playing', () => {}, true], ...fixes],
+  });
+}
+
+/** Plays the moves one pair at a time, highlighting each pair like a hint before removing it. */
+function playSolution(moves) {
+  let pending;
+  const run = { phase: 'playing', stop: () => clearTimeout(pending) };
+  solving = run;
+  syncSolveButton();
+  timer.start();
+
+  let next = 0;
+  const step = () => {
+    if (solving !== run) return;
+    const [a, b] = moves[next];
+    if (!game.isFree(a) || !game.isFree(b)) {
+      stopSolver();
+      return toast('The board changed, so the auto-solver stopped.');
+    }
+    refresh([a, b]);
+    pending = setTimeout(() => {
+      game.removePair(a, b);
+      game.autoSolved = true;
+      sound.match();
+      next++;
+      if (next < moves.length) {
+        refresh();
+        pending = setTimeout(step, SOLVE_GAP_MS);
+        return;
+      }
+      solving = null;
+      syncSolveButton();
+      refresh();
+      checkEnd();
+    }, SOLVE_HINT_MS);
+  };
+  step();
+}
+
+$('#solver-cancel').addEventListener('click', () => stopSolver({ announce: true }));
 
 // ---- Dialogs ---------------------------------------------------------------
 

@@ -17,7 +17,7 @@ with four of each, four each of the 4 Winds and 3 Dragons, and one each of 4 Flo
 **Every deal can be won.** The generator plays the layout backwards: it removes random pairs of free
 slots, then gives each pair matching faces. Shuffles are dealt the same way.
 
-Keyboard: `H` hint · `U` / `Ctrl+Z` undo · `S` shuffle · `N` new game · `R` restart · `M` mute · `Esc` deselect.
+Keyboard: `H` hint · `U` / `Ctrl+Z` undo · `S` shuffle · `A` auto-solve · `N` new game · `R` restart · `M` mute · `Esc` deselect.
 Each deal has a shareable URL such as `#owl-1234`.
 
 ## Features
@@ -29,6 +29,8 @@ Each deal has a shareable URL such as `#owl-1234`.
 - 7 themes: Jade Classic, Midnight, Sakura, Ocean Breeze, Imperial Ember, Neon Arcade, Emoji Garden
 - 2 face sets: traditional tiles drawn as SVG in code, and emoji
 - Hints, unlimited undo (including shuffles), solvable reshuffle, timer, best time per layout
+- Auto-solver: searches (for up to 10 seconds) for a way to clear the tiles left, then plays it
+  out move by move with the hint highlight. Press Solve again to stop.
 - Sound effects for matches and wrong picks (synthesized with Web Audio, can be muted)
 - Animated background per theme: drifting motes, stars, petals, bubbles, embers, neon streaks, butterflies
 - Responsive layout, keyboard support, `prefers-reduced-motion` support
@@ -50,6 +52,8 @@ src/core/             pure game logic, no DOM (unit tested)
   board.js            geometry and the free-tile rule
   generator.js        solvable deal generation
   game.js             game state: select, match, undo, hint, shuffle, status
+  solver.js           auto-solver: searches for a full clearing order
+  solverWorker.js     runs the solver in a Web Worker, off the main thread
   rng.js              seeded PRNG for reproducible deals
 src/ui/
   boardView.js        renders a Game into the DOM

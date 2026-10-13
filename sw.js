@@ -34,6 +34,8 @@ const PRECACHE_URLS = [
   'src/core/generator.js',
   'src/core/layouts.js',
   'src/core/rng.js',
+  'src/core/solver.js',
+  'src/core/solverWorker.js',
   'src/core/tiles.js',
   'src/ui/boardView.js',
   'src/ui/storage.js',

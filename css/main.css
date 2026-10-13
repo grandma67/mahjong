@@ -396,6 +396,70 @@ kbd {
 .toggle { display: flex; align-items: center; gap: 10px; padding: 6px 0; cursor: pointer; }
 .toggle input { width: 18px; height: 18px; accent-color: var(--accent); }
 
+/* ---- Auto-solver ------------------------------------------------------- */
+
+.actions button[data-action='solve'][aria-pressed='true'] {
+  background: var(--hint); color: #fff; border-color: transparent;
+  box-shadow: 0 0 14px color-mix(in srgb, var(--hint) 60%, transparent);
+}
+
+/* While the solver searches, the board rests under a floating panel. */
+.solver-searching .board-surface { filter: blur(1.5px) saturate(0.7); opacity: 0.6; transition: filter 0.3s, opacity 0.3s; }
+
+.solver-panel {
+  position: fixed; left: 50%; top: 50%;
+  transform: translate(-50%, -50%);
+  width: min(340px, calc(100vw - 32px));
+  padding: 22px 24px 18px;
+  border: 1px solid color-mix(in srgb, var(--text) 15%, transparent);
+  border-radius: 18px;
+  background: var(--panel-solid); color: var(--text);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.5);
+  text-align: center;
+  z-index: 40;
+  animation: dialog-in 0.22s ease;
+}
+.solver-panel[hidden] { display: none; }
+.solver-title { margin: 14px 0 4px; font-size: 1.15rem; font-weight: 600; }
+.solver-detail { margin: 0; font-size: 0.85rem; opacity: 0.7; font-variant-numeric: tabular-nums; min-height: 1.3em; }
+.solver-panel button {
+  margin-top: 14px; padding: 7px 18px; border-radius: 999px; cursor: pointer;
+  border: 1px solid color-mix(in srgb, var(--text) 25%, transparent);
+  background: transparent;
+}
+.solver-panel button:hover { background: color-mix(in srgb, var(--text) 10%, transparent); }
+
+/* Four little tiles taking turns to flip, like a hand being sorted. */
+.solver-tiles { display: flex; justify-content: center; gap: 7px; height: 40px; align-items: center; }
+.solver-tiles span {
+  width: 22px; height: 29px; border-radius: 4px;
+  background: linear-gradient(145deg, var(--tile-face), var(--tile-face-2));
+  border: 1px solid var(--tile-edge);
+  box-shadow: 2px 2px 0 var(--tile-side), 3px 3px 0 var(--tile-side-2);
+  animation: solver-flip 1.4s ease-in-out infinite;
+}
+.solver-tiles span:nth-child(2) { animation-delay: 0.15s; }
+.solver-tiles span:nth-child(3) { animation-delay: 0.3s; }
+.solver-tiles span:nth-child(4) { animation-delay: 0.45s; }
+@keyframes solver-flip {
+  0%, 60%, 100% { transform: translateY(0) rotateY(0); }
+  20% { transform: translateY(-8px) rotateY(90deg); background: var(--hint); }
+  40% { transform: translateY(0) rotateY(180deg); }
+}
+
+/* Countdown of the search's time budget. */
+.solver-meter {
+  height: 4px; margin-top: 14px; border-radius: 999px; overflow: hidden;
+  background: color-mix(in srgb, var(--text) 12%, transparent);
+}
+.solver-meter span {
+  display: block; height: 100%; width: 100%;
+  background: linear-gradient(90deg, var(--accent), var(--hint));
+  transform-origin: left;
+  animation: solver-meter 10s linear forwards;
+}
+@keyframes solver-meter { from { transform: scaleX(1); } to { transform: scaleX(0); } }
+
 /* ---- Toast -------------------------------------------------------------- */
 
 .toast {
@@ -414,4 +478,5 @@ kbd {
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+  .solver-meter { display: none; } /* the seconds-left text tells the same story */
 }
