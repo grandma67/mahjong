@@ -22,9 +22,9 @@ Each deal has a shareable URL such as `#owl-1234`.
 
 ## Features
 
-- 19 layouts. Most are shaped about 8 tiles wide by 12 tall (or 12 by 8) so they fill a phone screen:
-  - Tall: Owl (the default, all 144 tiles), Rocket, Cat, Arrow, Hourglass, Lighthouse, Pine Tree, Vase
-  - Wide: Castle, Butterfly, Crab, Spider, Arena, Bridge, Fish. On a phone held upright these are drawn turned 90°.
+- 23 layouts. Most are shaped about 8 tiles wide by 12 tall (or 12 by 8) so they fill a phone screen:
+  - Tall: Owl (the default, all 144 tiles), Rocket, Cat, Arrow, Hourglass, Lighthouse, Pine Tree, Vase, Two Towers and Rhombus (144 tiles), Ziggurat (288 tiles, two full sets)
+  - Wide: Castle, Butterfly, Crab, Spider, Arena, Bridge, Fish, Volcano (288 tiles). On a phone held upright these are drawn turned 90°.
   - Classic blocks: Pyramid, Fortress, Cross, Garden
 - 7 themes: Jade Classic, Midnight, Sakura, Ocean Breeze, Imperial Ember, Neon Arcade, Emoji Garden
 - 2 face sets: traditional tiles drawn as SVG in code, and emoji

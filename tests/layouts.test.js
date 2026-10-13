@@ -16,7 +16,7 @@ for (const layout of LAYOUTS) {
   test(`layout "${layout.id}" is well formed`, () => {
     const { slots } = layout;
     assert.equal(slots.length % 2, 0, 'needs an even number of tiles');
-    assert.ok(slots.length <= 144, 'fits in one tile set');
+    assert.ok(slots.length <= 288, 'fits in two tile sets');
 
     for (const a of slots) {
       for (const b of slots) {
@@ -74,4 +74,15 @@ test('bounds covers the whole layout in half-tile units', () => {
   const slots = [{ x: 0, y: 0, z: 0 }, { x: 6, y: 3, z: 0 }, { x: 2, y: 1, z: 2 }];
   assert.deepEqual(bounds(slots), { width: 8, height: 5, layers: 3 });
   assert.deepEqual(bounds(getLayout('pyramid').slots), { width: 16, height: 16, layers: 4 });
+});
+
+test('the 144- and 288-tile shapes are 8 by 12 tiles (or 12 by 8) to fit a phone', () => {
+  const sizes = { towers: 144, rhombus: 144, ziggurat: 288, volcano: 288 };
+  for (const [id, count] of Object.entries(sizes)) {
+    const layout = getLayout(id);
+    assert.equal(layout.id, id);
+    assert.equal(layout.slots.length, count, id);
+    const { width, height } = bounds(layout.slots);
+    assert.deepEqual([width / 2, height / 2].sort((a, b) => a - b), [8, 12], id);
+  }
 });
