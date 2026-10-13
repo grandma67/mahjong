@@ -121,8 +121,18 @@ function recordWin() {
       `You finished ${game.layout.name} in ${formatTime(seconds)}` +
       (extras.length ? ` with ${extras.join(' and ')}.` : '.') +
       (isBest ? ' That is a new best time!' : ` Best: ${formatTime(best)}.`),
-    actions: [['Play again', () => startGame(game.layout.id), true]],
+    actions: [
+      ['Play again', () => startGame(game.layout.id), true],
+      ['New game', () => startGame(randomLayoutId(game.layout.id))],
+    ],
   });
+}
+
+/** Picks a random layout, avoiding the current one when there is a choice. */
+function randomLayoutId(currentId) {
+  const others = LAYOUTS.filter((l) => l.id !== currentId);
+  const pool = others.length ? others : LAYOUTS;
+  return pool[Math.floor(Math.random() * pool.length)].id;
 }
 
 // ---- Toolbar actions -------------------------------------------------------
