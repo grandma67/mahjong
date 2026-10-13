@@ -369,3 +369,6 @@ if (!prefs.seenHelp) {
   savePrefs(prefs);
   openDialog('#help-dialog');
 }
+
+// Tells the start-up safety net in index.html that the app is running.
+document.documentElement.dataset.app = 'ready';

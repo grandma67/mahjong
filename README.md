@@ -122,5 +122,6 @@ To turn it on once, go to **Settings → Pages → Build and deployment → Sour
 
 You can also choose **Deploy from a branch** with `main` / `(root)`. The site has no build step,
 and `.nojekyll` is already in place. In that mode the service worker version is not stamped, so bump
-`VERSION` in `sw.js` by hand when you release. Until you do, returning visitors still get updates
-one load late through stale-while-revalidate.
+`VERSION` in `sw.js` by hand when you release. Until you do, returning visitors keep the version
+their service worker cached. App files always come from that one cached deploy, never mixed with
+newer ones, because a module from one deploy importing from another can stop the game from starting.

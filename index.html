@@ -122,6 +122,35 @@
   </dialog>
 
   <noscript><p class="noscript">This game needs JavaScript.</p></noscript>
+  <script>
+    // Safety net: if the app did not start (for example a cache held files
+    // from two deploys, so a module import failed and no tiles appear), drop
+    // this app's service worker and caches, re-download the files it loaded,
+    // and reload once. Plain script, so it runs even when the modules fail.
+    window.addEventListener('load', function () {
+      if (document.documentElement.dataset.app === 'ready') return;
+      var KEY = 'rh-mahjong-solitaire:recovered';
+      try {
+        if (sessionStorage.getItem(KEY)) return;
+        sessionStorage.setItem(KEY, '1');
+      } catch (e) {
+        return; // without storage we could not stop a reload loop
+      }
+      var jobs = performance.getEntriesByType('resource')
+        .filter(function (r) { return r.name.indexOf(location.origin + '/') === 0; })
+        .map(function (r) { return fetch(r.name, { cache: 'reload' }); });
+      if ('serviceWorker' in navigator) {
+        jobs.push(navigator.serviceWorker.getRegistration().then(function (reg) { return reg && reg.unregister(); }));
+      }
+      if (window.caches) {
+        jobs.push(caches.keys().then(function (keys) {
+          return Promise.all(keys.filter(function (k) { return k.indexOf('rh-mahjong-solitaire-') === 0; })
+            .map(function (k) { return caches.delete(k); }));
+        }));
+      }
+      Promise.all(jobs.map(function (j) { return j.catch(function () {}); })).then(function () { location.reload(); });
+    });
+  </script>
   <script type="module" src="src/main.js"></script>
 </body>
 </html>

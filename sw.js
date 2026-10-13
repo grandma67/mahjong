@@ -7,18 +7,20 @@
  * caches.match(), which would also search other apps' caches.
  *
  * Strategy:
- *  - App shell is precached on install, so the game works offline.
- *  - Page navigations: network first, falling back to the cached shell.
- *  - Other in-scope files: stale-while-revalidate.
+ *  - App files (the page and every module) are precached on install and
+ *    always served from that precache, so the game works offline and every
+ *    file comes from the same deploy. Refreshing files one by one could mix
+ *    two deploys, and an ES module importing a name an older file lacks
+ *    stops the whole app (no tiles at all). A deploy changes this file,
+ *    which installs a new worker with a fresh precache; the next launch
+ *    uses it.
  *  - Google Fonts: cache first, since font URLs are immutable.
  */
 const APP_ID = 'rh-mahjong-solitaire';
 const VERSION = 'dev'; // replaced with the commit SHA by the deploy workflow
-const PRECACHE = `${APP_ID}-precache-${VERSION}`;
-const RUNTIME = `${APP_ID}-runtime-${VERSION}`; // refreshed copies of app files
+const PRECACHE = `${APP_ID}-precache-${VERSION}`; // one deploy's app files
 const FONTS = `${APP_ID}-fonts`; // survives deploys: font files never change
-// Lookup order: freshest copy first.
-const OWN_CACHES = [RUNTIME, PRECACHE, FONTS];
+const OWN_CACHES = [PRECACHE, FONTS];
 
 const PRECACHE_URLS = [
   './',
@@ -95,23 +97,14 @@ async function store(cacheName, request, response) {
   return response;
 }
 
-async function networkFirstPage(request) {
-  try {
-    return await store(RUNTIME, request, await fetch(request));
-  } catch {
-    return (await matchOwn(request, { ignoreSearch: true })) ?? (await matchOwn('./'));
+/** Serves an app file from this deploy's precache; the network is only a fallback. */
+async function fromPrecache(request) {
+  const cache = await caches.open(PRECACHE);
+  if (request.mode === 'navigate') {
+    // Any page URL in scope is the app shell; the hash never reaches the worker.
+    return (await cache.match(request, { ignoreSearch: true })) ?? (await cache.match('./')) ?? fetch(request);
   }
-}
-
-async function staleWhileRevalidate(event) {
-  const { request } = event;
-  const cached = await matchOwn(request);
-  const network = fetch(request).then((res) => store(RUNTIME, request, res));
-  if (cached) {
-    event.waitUntil(network.catch(() => {}));
-    return cached;
-  }
-  return network;
+  return (await cache.match(request)) ?? fetch(request);
 }
 
 async function cacheFirst(request) {
@@ -126,6 +119,6 @@ self.addEventListener('fetch', (event) => {
   if (FONT_HOSTS.includes(url.hostname)) {
     event.respondWith(cacheFirst(request));
   } else if (request.url.startsWith(self.registration.scope)) {
-    event.respondWith(request.mode === 'navigate' ? networkFirstPage(request) : staleWhileRevalidate(event));
+    event.respondWith(fromPrecache(request));
   }
 });
