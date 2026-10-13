@@ -22,7 +22,7 @@
   --ink-blue: #1e4f9a;
   --ink-black: #1b1b1b;
   --select: #ffd54a;
-  --hint: #5fe3ff;
+  --hint: #ff4fd8;
   --tile-glow: transparent;
 
   --radius: 12px;
@@ -234,9 +234,60 @@ html.no-ambience body::before, html.no-ambience .ambience { display: none; }
   background: linear-gradient(145deg, color-mix(in srgb, var(--select) 30%, var(--tile-face)), var(--tile-face-2));
 }
 
-.tile.hint .tile-body { animation: hint-pulse 0.9s ease-in-out 3; }
-@keyframes hint-pulse {
-  50% { box-shadow: var(--tile-shadow), 0 0 0 4px var(--hint), 0 0 22px var(--hint); }
+/*
+ * Hint: the pair bobs, glows and sends out ripples for a few seconds, then
+ * keeps a steady ring until the next move. The ring is two-tone (a dark inner
+ * edge, then the theme's --hint color) so it reads on light and dark tiles
+ * and backgrounds alike.
+ */
+.tile.hint { animation: hint-bob 1.1s ease-in-out 5; }
+.tile.hint .tile-body {
+  --hint-ring: 0 0 0 2px rgba(0, 0, 0, 0.55), 0 0 0 5px var(--hint);
+  box-shadow: var(--tile-shadow), var(--hint-ring), 0 0 14px 2px var(--hint);
+  background: linear-gradient(145deg, color-mix(in srgb, var(--hint) 22%, var(--tile-face)), var(--tile-face-2));
+  animation: hint-glow 1.1s ease-in-out 5;
+}
+/* Light sweeping across the face. */
+.tile.hint .tile-body::after {
+  content: '';
+  position: absolute;
+  inset: -20% -60%;
+  pointer-events: none;
+  background: linear-gradient(105deg, transparent 40%, rgba(255, 255, 255, 0.75) 50%, transparent 60%);
+  transform: translateX(-100%);
+  animation: hint-shine 1.1s ease-in-out 5;
+}
+/* Ripple spreading out from the tile. */
+.tile.hint::after {
+  content: '';
+  position: absolute;
+  inset: 0 1px 1px 0;
+  border-radius: calc(var(--tw) * 0.12);
+  border: 3px solid var(--hint);
+  pointer-events: none;
+  opacity: 0;
+  animation: hint-ripple 1.1s ease-out 5;
+}
+@keyframes hint-bob {
+  0%, 100% { transform: translateY(0) rotate(0deg) scale(1); }
+  25% { transform: translateY(-6px) rotate(-3deg) scale(1.06); }
+  50% { transform: translateY(-8px) rotate(0deg) scale(1.08); }
+  75% { transform: translateY(-6px) rotate(3deg) scale(1.06); }
+}
+@keyframes hint-glow {
+  0%, 100% { box-shadow: var(--tile-shadow), var(--hint-ring), 0 0 10px 1px var(--hint); }
+  50% {
+    box-shadow: var(--tile-shadow), var(--hint-ring), 0 0 28px 8px var(--hint);
+    background: linear-gradient(145deg, color-mix(in srgb, var(--hint) 45%, var(--tile-face)), var(--tile-face-2));
+  }
+}
+@keyframes hint-shine {
+  0%, 20% { transform: translateX(-100%); }
+  70%, 100% { transform: translateX(100%); }
+}
+@keyframes hint-ripple {
+  0% { opacity: 0.9; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1.45); }
 }
 
 .tile.shake { animation: shake 0.32s ease; }

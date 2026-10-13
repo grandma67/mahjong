@@ -26,7 +26,7 @@ export const THEMES = Object.freeze([
     'ink-blue': '#1e4f9a',
     'ink-black': '#1b1b1b',
     'select': '#ffd54a',
-    'hint': '#5fe3ff',
+    'hint': '#ff4fd8',
     'tile-glow': 'transparent',
   }),
   theme('midnight', 'Midnight', 'traditional', 'dark', { kind: 'stars', colors: ['text', 'accent', 'select'] }, {
@@ -66,7 +66,7 @@ export const THEMES = Object.freeze([
     'ink-blue': '#6a5acd',
     'ink-black': '#3d1a2b',
     'select': '#ff7eb6',
-    'hint': '#55c7a6',
+    'hint': '#0f9d8a',
     'tile-glow': 'transparent',
   }),
   theme('ocean', 'Ocean Breeze', 'traditional', 'dark', { kind: 'bubbles', colors: ['text', 'tile-side'] }, {
@@ -126,7 +126,7 @@ export const THEMES = Object.freeze([
     'ink-blue': '#28d7ff',
     'ink-black': '#fff36b',
     'select': '#ff2bd6',
-    'hint': '#39ff9e',
+    'hint': '#d4ff1f',
     'tile-glow': 'rgba(0, 229, 255, 0.45)',
   }),
   theme('garden', 'Emoji Garden', 'emoji', 'light', { kind: 'butterflies', colors: ['accent'] }, {
@@ -146,7 +146,7 @@ export const THEMES = Object.freeze([
     'ink-blue': '#3e7bd6',
     'ink-black': '#3a3a3a',
     'select': '#ff8a3d',
-    'hint': '#3e7bd6',
+    'hint': '#b23cff',
     'tile-glow': 'transparent',
   }),
 ]);
